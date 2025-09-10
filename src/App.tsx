@@ -1,9 +1,9 @@
 import React from 'react';
-import './App.css';
+import StockList from './components/StockList';
 
 function App() {
   return (
-    <div></div>
+    <StockList />
   );
 }
 
