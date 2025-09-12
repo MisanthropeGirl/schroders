@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
-import { POLYGON_LIST_URL } from '../constants';
-import { dataFetch } from '../utilities';
+import { POLYGON_LIST_URL } from '../../constants';
+import { dataFetch } from '../../utilities';
 
 function StockList() {
   const [data, setData] = useState<Stock[]>([]);
@@ -44,6 +44,24 @@ function StockList() {
     loadData();
   }, [])
 
+  useEffect(() => {
+    // keep this useEffect to (re)load the chart?
+    // Though chart will be a separate component, not loaded via this one so how does that work again?
+    console.log(selectedStocks);
+  }, [selectedStocks]);
+
+  const handleChangeEvent = (e: ChangeEvent<HTMLInputElement>): void => {
+    const ticker = e.target.value;
+    if (e.target.checked) {
+      // need to figure out how to disabled the other checkboxes if length = 3
+      if (selectedStocks.length < 3) {
+        setSelectedStocks([...selectedStocks, ticker]);
+      }
+    } else {
+      setSelectedStocks(selectedStocks.filter(it => it !== ticker));
+    }
+  };
+
   if (loading) {
     return <div>Loading table</div>;
   }
@@ -59,6 +77,7 @@ function StockList() {
     <Table size='small' stickyHeader>
       <TableHead>
         <TableRow>
+          <TableCell variant='head'></TableCell>
           <TableCell align='left' variant='head'>Ticker</TableCell>
           <TableCell align='left' variant='head'>Name</TableCell>
           <TableCell align='left' variant='head'>Exchange</TableCell>
@@ -70,6 +89,9 @@ function StockList() {
         {(data || []).map((stock: Stock, index: number) => {
           return (
             <TableRow key={index} hover>
+              <TableCell>
+                <Checkbox value={stock.ticker} onChange={handleChangeEvent} />
+              </TableCell>
               <TableCell>{stock.ticker}</TableCell>
               <TableCell>{stock.name}</TableCell>
               <TableCell>{stock.primary_exchange}</TableCell>

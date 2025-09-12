@@ -1,6 +1,6 @@
 import React from 'react';
-import StockList from './components/StockList';
-import StockChart from './components/StockChart';
+import StockList from './components/StockList/StockList';
+import StockChart from './components/StockChart/StockChart';
 
 function App() {
   return (

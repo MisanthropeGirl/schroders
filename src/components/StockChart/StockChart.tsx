@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { format, subYears } from 'date-fns';
-import { dataFetch } from '../utilities';
-import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../constants";
+import { dataFetch } from '../../utilities';
+import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
 import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
 import './StockChart.css';
