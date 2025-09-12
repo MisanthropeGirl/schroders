@@ -1,10 +1,9 @@
 import { rest } from 'msw';
-import { POLYGON_API_URL } from '../constants';
-import { apiOutput } from '../utilities/index.mock';
+import { POLYGON_LIST_URL } from '../constants';
+import { stockListApiOutput } from '../utilities/index.mock';
  
 export const handlers = [
-	rest.get(POLYGON_API_URL, (req, res, ctx) => {
-		return res(ctx.json(apiOutput));
+	rest.get(POLYGON_LIST_URL, (req, res, ctx) => {
+		return res(ctx.json(stockListApiOutput));
 	}),
 ];
-

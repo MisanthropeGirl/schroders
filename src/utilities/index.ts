@@ -1,16 +1,12 @@
-import { POLYGON_API_KEY, POLYGON_API_URL } from './../constants';
+import { POLYGON_API_KEY } from './../constants';
 
-export const dataFetch = async (options: SearchParams) => {
+export const dataFetch = async (url: string, options: SearchParams) => {
   const params = convertObjectToString(options);
-  const response = await fetch(`${POLYGON_API_URL}?apiKey=${POLYGON_API_KEY}${params}`);
-
+  const response = await fetch(`${url}?apiKey=${POLYGON_API_KEY}${params}`);
   if (!response.ok) {
     throw new Error(`HTTP error: Status ${response.status}`);
   }
-
-  const apiOutput: ApiResult = await response.json();
-
-  return apiOutput.results;
+  return await response.json();
 };
 
 export const convertObjectToString = (obj: object): string => {

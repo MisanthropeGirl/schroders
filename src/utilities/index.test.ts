@@ -1,7 +1,7 @@
 import { convertObjectToString, dataFetch } from '.';
-import { POLYGON_API_URL } from '../constants';
 import { server } from '../tests/server'; 
-import { apiOutput } from './index.mock';
+import { POLYGON_LIST_URL } from '../constants';
+import { stockListApiOutput } from './index.mock';
 
 describe('convertObjectToString', () => {
   test('it will return an empty string if there is an empty object', () => {
@@ -27,6 +27,6 @@ describe('dataFetch', () => {
   afterAll(() => server.close())
   
   it('it will return an api response', async () => {
-    await expect(dataFetch({})).resolves.toEqual(apiOutput.results);
+    await expect(dataFetch(POLYGON_LIST_URL, {})).resolves.toEqual(stockListApiOutput);
   })
 });

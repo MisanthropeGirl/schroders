@@ -1,25 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
+import { POLYGON_LIST_URL } from '../constants';
 import { dataFetch } from '../utilities';
-import { Table, TableHead, TableCell, TableRow, TableBody } from '@mui/material';
 
 function StockList() {
-  const [data, setData] = useState<Stock[] | null>();
+  const [data, setData] = useState<Stock[]>([]);
+  const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const stockData = await dataFetch({
-          market: 'stocks',
-          type: 'CS',
-          exchange: 'XNYS',
-          active: true,
-          order: 'asc',
-          limit: 100,
-          sort: 'ticker'
-        });
-        setData(stockData);
+        const stockList = await dataFetch(
+          POLYGON_LIST_URL,
+          {
+            market: 'stocks',
+            type: 'CS',
+            exchange: 'XNYS',
+            active: true,
+            order: 'asc',
+            limit: 100,
+            sort: 'ticker'
+          }
+        );
+        setData(stockList.results);
         setError(false);
       }
       catch (err: unknown) {
@@ -29,7 +34,7 @@ function StockList() {
           setError(true);
           throw err;
         }
-        setData(null)
+        setData([])
       }
       finally {
         setLoading(false);
@@ -40,7 +45,7 @@ function StockList() {
   }, [])
 
   if (loading) {
-    // show a spinner or some such
+    return <div>Loading table</div>;
   }
   
   if (error) {
@@ -68,7 +73,7 @@ function StockList() {
               <TableCell>{stock.ticker}</TableCell>
               <TableCell>{stock.name}</TableCell>
               <TableCell>{stock.primary_exchange}</TableCell>
-              <TableCell>{stock.currency_name.toUpperCase()}</TableCell>
+              <TableCell>{stock.currency_name?.toUpperCase()}</TableCell>
             </TableRow>
           )
         })}
