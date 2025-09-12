@@ -6,18 +6,23 @@ import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
 import './StockChart.css';
 
+interface StockChartProps {
+  selectedTickers: string[];
+  priceOption: string;
+}
+
 interface RawData {
   ticker: string;
   data: StockData[];
 }
 
-interface TransformedData {
+interface ChartData {
   name: string;
   type: string;
   data: [number, number][];
 }
 
-function StockChart() {
+function StockChart({ selectedTickers, priceOption }: StockChartProps) {
   const [data, setData] = useState<RawData[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
@@ -55,12 +60,11 @@ function StockChart() {
       }
     }
 
-    const tickers = ['AAPL', 'AMZN', 'GOOG'];
     setData([]);
-    tickers.forEach(ticker => {
+    selectedTickers.forEach(ticker => {
       loadData(ticker);
     })
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, selectedTickers]);
 
   if (loading) {
     return (
@@ -80,7 +84,7 @@ function StockChart() {
     );
   }
 
-  const transformData = (key: string): TransformedData[] => {
+  const transformData = (key: string): ChartData[] => {
     return data.map(stock => {
       return ({
         type: 'line',
@@ -93,12 +97,13 @@ function StockChart() {
     });
   }
 
-  const closeData = transformData(PRICE_SERIES_CODES.CLOSE);
-  const highData = transformData(PRICE_SERIES_CODES.HIGH);
-  const lowData = transformData(PRICE_SERIES_CODES.LOW);
-  const openData = transformData(PRICE_SERIES_CODES.OPEN);
+  const transformedData: { [key: string]: ChartData[] } = {};
+  transformedData['Close'] = transformData(PRICE_SERIES_CODES.CLOSE);
+  transformedData['High'] = transformData(PRICE_SERIES_CODES.HIGH);
+  transformedData['Low'] = transformData(PRICE_SERIES_CODES.LOW);
+  transformedData['Open'] = transformData(PRICE_SERIES_CODES.OPEN);
 
-  const options: Highcharts.Options = {
+  const chartOptions: Highcharts.Options = {
     chart: {
       type: 'line',
       zooming: {
@@ -106,7 +111,7 @@ function StockChart() {
       }
     },
     title: {
-      text: 'Closing Price over time'
+      text: `${priceOption} Price over time`
     },
     subtitle: {
       text: document.ontouchstart === undefined ?
@@ -133,14 +138,16 @@ function StockChart() {
     },
     // Gave up trying to fix the typescript issue here and bypassed it
     // @ts-ignore comment
-    series: closeData
+    series: transformedData[priceOption]
   };
+
+
 
   return (
     <div className="chart">
       <HighchartsReact
         highcharts={Highcharts}
-        options={options}
+        options={chartOptions}
         ref={chartComponentRef}
         />
     </div>

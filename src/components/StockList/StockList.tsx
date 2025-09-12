@@ -3,9 +3,13 @@ import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui
 import { POLYGON_LIST_URL } from '../../constants';
 import { dataFetch } from '../../utilities';
 
-function StockList() {
+interface StockListProps {
+  selectedTickers: string[];
+  changeSelectedTickers: (e: ChangeEvent<HTMLInputElement>) => void;
+}
+
+function StockList({ selectedTickers, changeSelectedTickers }: StockListProps) {
   const [data, setData] = useState<Stock[]>([]);
-  const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
 
@@ -44,24 +48,6 @@ function StockList() {
     loadData();
   }, [])
 
-  useEffect(() => {
-    // keep this useEffect to (re)load the chart?
-    // Though chart will be a separate component, not loaded via this one so how does that work again?
-    console.log(selectedStocks);
-  }, [selectedStocks]);
-
-  const handleChangeEvent = (e: ChangeEvent<HTMLInputElement>): void => {
-    const ticker = e.target.value;
-    if (e.target.checked) {
-      // need to figure out how to disabled the other checkboxes if length = 3
-      if (selectedStocks.length < 3) {
-        setSelectedStocks([...selectedStocks, ticker]);
-      }
-    } else {
-      setSelectedStocks(selectedStocks.filter(it => it !== ticker));
-    }
-  };
-
   if (loading) {
     return <div>Loading table</div>;
   }
@@ -90,7 +76,7 @@ function StockList() {
           return (
             <TableRow key={index} hover>
               <TableCell>
-                <Checkbox value={stock.ticker} onChange={handleChangeEvent} />
+                <Checkbox value={stock.ticker} disabled={selectedTickers.length > 2 && !selectedTickers.includes(stock.ticker)} onChange={changeSelectedTickers} />
               </TableCell>
               <TableCell>{stock.ticker}</TableCell>
               <TableCell>{stock.name}</TableCell>

@@ -1,7 +1,12 @@
+import { ChangeEvent } from "react";
 import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from "@mui/material";
 import './ChartOptions.css';
 
-function ChartOptions() {
+interface ChartOptionsProps {
+  changePriceOption: (e: ChangeEvent<HTMLInputElement>) => void;
+}
+
+function ChartOptions({ changePriceOption }: ChartOptionsProps) {
   const options = ['Close', 'High', 'Low', 'Open'];
 
   return (
@@ -11,10 +16,12 @@ function ChartOptions() {
         row
         aria-labelledby="radio-buttons-group-label"
         name="row-radio-buttons-group"
+        onChange={changePriceOption}
+        defaultValue={options[0]}
       >
-        {options.map(option => {
+        {options.map((option, index) => {
           return (
-            <FormControlLabel value={option.toLowerCase()} control={<Radio />} label={option} />
+            <FormControlLabel key={index} value={option} control={<Radio />} label={option} />
           )
         })}
       </RadioGroup>
