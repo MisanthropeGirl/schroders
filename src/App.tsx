@@ -4,6 +4,8 @@ import StockChart from './components/StockChart/StockChart';
 import ChartOptions from './components/ChartOptions/ChartOptions';
 
 function App() {
+  const [newTicker, setNewTicker] = useState<string>('');
+  const [removedTicker, setRemovedTicker] = useState<string>('');
   const [selectedTickers, setSelectedTickers] = useState<string[]>([]);
   const [priceOption, setPriceOption] = useState<string>('Close');
 
@@ -12,15 +14,16 @@ function App() {
 
     if (e.target.checked) {
       if (selectedTickers.length < 3) {
+        setNewTicker(ticker);
+        setRemovedTicker('');
         setSelectedTickers([...selectedTickers, ticker]);
       }
     } else {
+      setNewTicker('');
+      setRemovedTicker(ticker);
       setSelectedTickers(selectedTickers.filter(it => it !== ticker));
     }
   };
-  
-  // need to figure out how to disabled the other checkboxes if length = 3
-  // useEffect that reloads
 
   const changePriceOption = (e: ChangeEvent<HTMLInputElement>): void => {
     setPriceOption(e.target.value);
@@ -28,7 +31,7 @@ function App() {
 
   return (
     <>
-      <StockChart selectedTickers={selectedTickers} priceOption={priceOption} />
+      <StockChart newTicker={newTicker} removedTicker={removedTicker} selectedTickers={selectedTickers} priceOption={priceOption} />
       <ChartOptions changePriceOption={changePriceOption} />
       <StockList selectedTickers={selectedTickers} changeSelectedTickers={changeSelectedTickers} />
     </>

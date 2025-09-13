@@ -7,6 +7,8 @@ import { HighchartsReact } from 'highcharts-react-official';
 import './StockChart.css';
 
 interface StockChartProps {
+  newTicker: string;
+  removedTicker: string;
   selectedTickers: string[];
   priceOption: string;
 }
@@ -22,7 +24,7 @@ interface ChartData {
   data: [number, number][];
 }
 
-function StockChart({ selectedTickers, priceOption }: StockChartProps) {
+function StockChart({ newTicker, removedTicker, selectedTickers, priceOption }: StockChartProps) {
   const [data, setData] = useState<RawData[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
@@ -33,17 +35,17 @@ function StockChart({ selectedTickers, priceOption }: StockChartProps) {
   const fromDate = format(subYears(toDate, 1), 'yyyy-MM-dd');
 
   useEffect(() => {
-    const loadData = async (ticker: string) => {
+    const loadData = async () => {
       try {
         const stockData = await dataFetch(
-          `${POLYGON_DATA_URL}/${ticker}/range/1/day/${fromDate}/${toDate}`,
+          `${POLYGON_DATA_URL}/${newTicker}/range/1/day/${fromDate}/${toDate}`,
           {
             adjusted: true,
             sort: 'asc',
           }
         );
 
-        setData(d => { return [...d, { 'ticker': ticker, data: stockData.results }]});
+        setData(d => { return [...d, { 'ticker': newTicker, data: stockData.results }]});
         setError(false);
       }
       catch (err: unknown) {
@@ -60,16 +62,21 @@ function StockChart({ selectedTickers, priceOption }: StockChartProps) {
       }
     }
 
-    setData([]);
-    selectedTickers.forEach(ticker => {
-      loadData(ticker);
-    })
-  }, [fromDate, toDate, selectedTickers]);
+    if (newTicker !== '') {
+      loadData();
+    }
+  }, [fromDate, toDate, newTicker]);
+
+  useEffect(() => {
+    if (removedTicker !== '') {
+      setData(d => d.filter(it => it.ticker !== removedTicker));
+    }
+  }, [removedTicker]);
 
   if (loading) {
     return (
       <div className="chart">
-        <div className="chartMsg">Loading chart</div>
+        <div className="chartMsg">Awaiting data…</div>
       </div>
     );
   }
@@ -140,8 +147,6 @@ function StockChart({ selectedTickers, priceOption }: StockChartProps) {
     // @ts-ignore comment
     series: transformedData[priceOption]
   };
-
-
 
   return (
     <div className="chart">
