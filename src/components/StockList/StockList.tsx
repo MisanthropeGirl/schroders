@@ -1,17 +1,19 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
 import { POLYGON_LIST_URL } from '../../constants';
+import { selectSelectedTickers } from '../../selectors';
 import { dataFetch } from '../../utilities';
+import { setNewTicker, setRemovedTicker, setSelectedTickers } from '../../actions';
 
-interface StockListProps {
-  selectedTickers: string[];
-  changeSelectedTickers: (e: ChangeEvent<HTMLInputElement>) => void;
-}
-
-function StockList({ selectedTickers, changeSelectedTickers }: StockListProps) {
+function StockList() {
   const [data, setData] = useState<Stock[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
+
+  const selectedTickers = useSelector(selectSelectedTickers) || [];
+
+  const dispatch = useDispatch()
 
   useEffect(() => {
     const loadData = async () => {
@@ -48,6 +50,22 @@ function StockList({ selectedTickers, changeSelectedTickers }: StockListProps) {
     loadData();
   }, [])
 
+  const handleClickEvent = (e: ChangeEvent<HTMLInputElement>): void => {
+    const ticker = e.target.value;
+
+    if (e.target.checked) {
+      if (selectedTickers.length < 3) {
+        dispatch(setNewTicker(ticker));
+        dispatch(setRemovedTicker(''));
+        dispatch(setSelectedTickers(ticker));
+      }
+    } else {
+      dispatch(setNewTicker(''));
+      dispatch(setRemovedTicker(ticker));
+      dispatch(setSelectedTickers(ticker));
+    }
+  };
+
   if (loading) {
     return <div>Loading table</div>;
   }
@@ -76,7 +94,7 @@ function StockList({ selectedTickers, changeSelectedTickers }: StockListProps) {
           return (
             <TableRow key={index} hover>
               <TableCell>
-                <Checkbox value={stock.ticker} disabled={selectedTickers.length > 2 && !selectedTickers.includes(stock.ticker)} onChange={changeSelectedTickers} />
+                <Checkbox value={stock.ticker} disabled={selectedTickers.length > 2 && !selectedTickers.includes(stock.ticker)} onChange={handleClickEvent} />
               </TableCell>
               <TableCell>{stock.ticker}</TableCell>
               <TableCell>{stock.name}</TableCell>

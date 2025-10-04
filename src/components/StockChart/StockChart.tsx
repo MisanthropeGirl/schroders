@@ -1,17 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { format, subYears } from 'date-fns';
 import { dataFetch } from '../../utilities';
 import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
 import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
 import './StockChart.css';
-
-interface StockChartProps {
-  newTicker: string;
-  removedTicker: string;
-  selectedTickers: string[];
-  priceOption: string;
-}
+import { useSelector } from "react-redux";
+import { selectFromDate, selectNewTicker, selectPriceOption, selectRemovedTicker, selectSelectedTickers, selectToDate } from "../../selectors";
 
 interface RawData {
   ticker: string;
@@ -24,51 +18,61 @@ interface ChartData {
   data: [number, number][];
 }
 
-function StockChart({ newTicker, removedTicker, selectedTickers, priceOption }: StockChartProps) {
+function StockChart() {
   const [data, setData] = useState<RawData[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
+
+  const newTicker = useSelector(selectNewTicker);
+  const removedTicker = useSelector(selectRemovedTicker);
+  const selectedTickers = useSelector(selectSelectedTickers);
+  const fromDate = useSelector(selectFromDate);
+  const toDate = useSelector(selectToDate);
+  const priceOption = useSelector(selectPriceOption);
+
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
-  // only have access to the last two years
-  const toDate = format(new Date(), 'yyyy-MM-dd');
-  const fromDate = format(subYears(toDate, 1), 'yyyy-MM-dd');
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const stockData = await dataFetch(
-          `${POLYGON_DATA_URL}/${newTicker}/range/1/day/${fromDate}/${toDate}`,
-          {
-            adjusted: true,
-            sort: 'asc',
-          }
-        );
-
-        setData(d => { return [...d, { 'ticker': newTicker, data: stockData.results }]});
-        setError(false);
-      }
-      catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError(true);
-          throw err;
+  const loadData = async (ticker: string, from: string = fromDate, to: string = toDate) => {
+    if (ticker === '') return;
+    try {
+      const stockData = await dataFetch(
+        `${POLYGON_DATA_URL}/${ticker}/range/1/day/${from}/${to}`,
+        {
+          adjusted: true,
+          sort: 'asc',
         }
-        setData([]);
-      }
-      finally {
-        setLoading(false);
-      }
-    }
+      );
 
-    if (newTicker !== '') {
-      loadData();
+      setData(data => { return [...data, { 'ticker': ticker, data: stockData.results }]});
+      setError(false);
     }
-  }, [fromDate, toDate, newTicker]);
+    catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(true);
+        throw err;
+      }
+      setData([]);
+    }
+    finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    if (removedTicker !== '') {
+    if (newTicker) {
+      loadData(newTicker);
+    }
+  }, [newTicker]);
+
+  useEffect(() => {
+    setData([]);
+    selectedTickers.map(ticker => loadData(ticker, fromDate, toDate));
+  }, [fromDate, toDate]);
+
+  useEffect(() => {
+    if (removedTicker && removedTicker !== '') {
       setData(d => d.filter(it => it.ticker !== removedTicker));
     }
   }, [removedTicker]);
@@ -113,17 +117,9 @@ function StockChart({ newTicker, removedTicker, selectedTickers, priceOption }: 
   const chartOptions: Highcharts.Options = {
     chart: {
       type: 'line',
-      zooming: {
-        type: 'x'
-      }
     },
     title: {
       text: `${priceOption} Price over time`
-    },
-    subtitle: {
-      text: document.ontouchstart === undefined ?
-        'Click and drag in the plot area to zoom in' :
-        'Pinch the chart to zoom in'
     },
     xAxis: {
       type: 'datetime'
@@ -154,7 +150,7 @@ function StockChart({ newTicker, removedTicker, selectedTickers, priceOption }: 
         highcharts={Highcharts}
         options={chartOptions}
         ref={chartComponentRef}
-        />
+      />
     </div>
   )
 }
