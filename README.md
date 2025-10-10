@@ -1,46 +1,273 @@
-# Getting Started with Create React App
+# Schroder's technical test
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, sarting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistence.
 
-## Available Scripts
+This is not a read me in the traditional sense but rather a diary of thngs I learnt/fought with along the way.
 
-In the project directory, you can run:
+## 2025-10-04
 
-### `npm start`
+Added old school style Redux (aka what I know thanks to my time at F1000). This is the first time I've done this from scratch (HL, GN and IT did this work for F1000) so it was all about seeing if I actually understood what I thought I did from that time.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Bit of a faff (some of which was removing the prop-drilling I had initially gone with). I have set an initial state for several parameters which I believe makes sense in the circumstances.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+The biggest fight I had was with getting Redux DevTools to acknowledge the store. AIUI the lack of middleware in the store in this iteration is the reason for this which is why I've had to [https://github.com/zalmoxisus/redux-devtools-extension/blob/master/docs/Recipes.md#using-in-a-typescript-project](explicitly link them up).
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 2025-10-10
 
-### `npm run build`
+Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistence, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Not knowing where to start, I took the sensible course and went looking to see [https://stackoverflow.com/questions/43044696/test-a-create-react-app-index-js-file](how others) have [https://joaoforja.com/blog/how-to-test-a-rect-app-indexjs](gone about it).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### First iteration
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+OK, I have a working app so implementing a basic test like the one below shouldn't be a problem, right? Oh, how young and innocent I was just 24 hours ago.
 
-### `npm run eject`
+```
+import React from "react";
+import ReactDOM from "react-dom";
+import App from "./App";
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+jest.mock("react-dom", () => ({ render: jest.fn() }));
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+describe("Application root", () => {
+  it("should render without crashing", () => {
+    const div = document.createElement("div");
+    div.id = "root";
+    document.body.appendChild(div);
+    require("./index.js");
+    expect(ReactDOM.render).toHaveBeenCalledWith(<App />, div);
+  });
+});
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+There are two issues
+1. VSCode flags a TypeScript error: `TS2339: Property 'render' does not exist on type 'typeof import("/Users/MisanthropeGirl/Websites/interviews/schroders/node_modules/@types/react-dom/index")'`.
+2. `TypeError: tk.CSS?.supports is not a function` on StockChart.tsx (which is the Highcharts import).
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Not having any luck on Google I turned to Claude (Sonnet 4.5) for help.
 
-## Learn More
+The first error is because I'm using React 19 and `ReactDOM.render` was removed in React 18. The suggested solution was:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+jest.mock("react-dom/client", () => ({
+  createRoot: jest.fn(() => ({
+    render: jest.fn(),
+    unmount: jest.fn(),
+  })),
+}));
+
+describe("Application root", () => {
+  it("should render without crashing", () => {
+    const div = document.createElement("div");
+    div.id = "root";
+    document.body.appendChild(div);
+    
+    require("./index.tsx");
+    
+    expect(createRoot).toHaveBeenCalledWith(div);
+  });
+});
+```
+
+Key Changes:
+1. Import from react-dom/client instead of react-dom
+2. Mock createRoot instead of render
+3. createRoot returns an object with render and unmount methods
+4. Update the expectation to check that createRoot was called with the div
+
+And that cured problem number 1.
+
+### Second iteration
+
+This was a sticking point for a bit because I only gave Claude the error and not the full stack trace leading it to diagnose the issue as something to do with `CSS.supports()` and the lack of support for that browser API in my test environment. A very real concern given that I can only go as far as Node.js v16 on this machine.
+
+Cue several hours of chasing our tails trying to modify parts of the setup - creating `jest.config.js` and `jest.setup.ts`, installing jsdom v22 - to see if that solved the problem before I came to my senses and gave Claude the full stack trace.
+
+The problem, as is obvious once you know, is that `require("./index.tsx")` loads all the components including StockChart.tsx, which imports Highcharts, and Highcharts needs `CSS.supports()` to be available at module load time - which is before Jest setup runs.
+
+The suggested solution therefore was to mock Highcharts since I don't actually need it to test the file.
+
+```
+import React from "react";
+import { createRoot } from "react-dom/client";
+import "@testing-library/jest-dom";
+
+jest.mock("react-dom/client", () => ({
+  createRoot: jest.fn(() => ({
+    render: jest.fn(),
+    unmount: jest.fn(),
+  })),
+}));
+
+// Mock Highcharts before importing App
+jest.mock("highcharts", () => ({}));
+jest.mock("highcharts-react-official", () => ({
+  HighchartsReact: () => null,
+}));
+
+// Mock Redux store
+jest.mock("./store", () => ({
+  store: {
+    getState: jest.fn(),
+    dispatch: jest.fn(),
+    subscribe: jest.fn(),
+  },
+}));
+
+import App from "./App";
+
+describe("Application root", () => {
+  it("should render without crashing", () => {
+    const div = document.createElement("div");
+    div.id = "root";
+    document.body.appendChild(div);
+    
+    require("./index.tsx");
+    
+    expect(createRoot).toHaveBeenCalledWith(div);
+  });
+});
+```
+
+Which, whilst dealing with the Highcharts problem, still threw an error: `TypeError: Cannot read properties of undefined (reading 'render')`;
+
+### Third iteration
+
+Claude said that this was still because of `index.tsx` loading things too early, in this case `createRoot` before the mock takes effect. The given solution was thus to mock everything before any imports:
+
+```
+import React from "react";
+import "@testing-library/jest-dom";
+
+// Mock everything BEFORE any imports that use them
+jest.mock("highcharts", () => ({}));
+jest.mock("highcharts-react-official", () => ({
+  HighchartsReact: () => null,
+}));
+
+jest.mock("./store", () => ({
+  store: {
+    getState: jest.fn(),
+    dispatch: jest.fn(),
+    subscribe: jest.fn(),
+  },
+}));
+
+const mockRender = jest.fn();
+const mockCreateRoot = jest.fn(() => ({
+  render: mockRender,
+  unmount: jest.fn(),
+}));
+
+jest.mock("react-dom/client", () => ({
+  createRoot: mockCreateRoot,
+}));
+
+describe("Application root", () => {
+  it("should render without crashing", () => {
+    const div = document.createElement("div");
+    div.id = "root";
+    document.body.appendChild(div);
+    
+    // Clear any previous calls
+    mockCreateRoot.mockClear();
+    mockRender.mockClear();
+    
+    // Now require index.tsx which will use the mocked createRoot
+    require("./index.tsx");
+    
+    expect(mockCreateRoot).toHaveBeenCalledWith(div);
+    expect(mockRender).toHaveBeenCalled();
+  });
+});
+```
+
+Key changes:
+1. Removed the import of createRoot at the top since you're mocking it
+2. Created mockRender and mockCreateRoot before the mock so you can reference them in your assertions
+3. Clear mocks before the test to ensure clean state
+4. Check that mockRender was called instead of checking the arguments to createRoot
+
+However I still had the same error so back to the drawing board.
+
+### Fourth iteration
+
+This time Claude suggested testing the rendering logic directly since there may be caching or the mock just isn't be applied correctly. It is also using `jest.isolateModules()` to ensure that `index.tsx` is loaded fresh and uses ths mocks.
+
+```
+import React from "react";
+import "@testing-library/jest-dom";
+import { createRoot } from "react-dom/client";
+
+// Mock everything BEFORE imports
+jest.mock("highcharts", () => ({}));
+jest.mock("highcharts-react-official", () => ({
+  HighchartsReact: () => null,
+}));
+
+jest.mock("./store", () => ({
+  store: {
+    getState: jest.fn(() => ({})),
+    dispatch: jest.fn(),
+    subscribe: jest.fn(),
+    replaceReducer: jest.fn(),
+  },
+}));
+
+jest.mock("./reportWebVitals", () => jest.fn());
+
+const mockRender = jest.fn();
+const mockUnmount = jest.fn();
+
+jest.mock("react-dom/client", () => ({
+  createRoot: jest.fn(() => ({
+    render: mockRender,
+    unmount: mockUnmount,
+  })),
+}));
+
+describe("Application root", () => {
+  beforeEach(() => {
+    // Clear all mocks before each test
+    jest.clearAllMocks();
+    
+    // Create root element
+    const root = document.createElement("div");
+    root.id = "root";
+    document.body.appendChild(root);
+  });
+
+  afterEach(() => {
+    // Clean up
+    document.body.innerHTML = "";
+  });
+
+  it("should render without crashing", () => {
+    // Manually execute what index.tsx does
+    const rootElement = document.getElementById("root") as HTMLElement;
+    
+    // Import and execute
+    jest.isolateModules(() => {
+      require("./index.tsx");
+    });
+    
+    expect(createRoot).toHaveBeenCalledWith(rootElement);
+    expect(mockRender).toHaveBeenCalled();
+  });
+});
+```
+
+But that didn't do the job either.
+
+### Fifth (and final) iteration
+
+The final suggestion was to strip things all the way back anf just check that the `App` component can be imported and created. It worked (see `index.test.tsx`).
+
+This is though a smoke test rather than a unit test so when I look at the coverage it still says that there is no test coverage.
+
+For the sake of my own sanity I also spun up a default `creat-react-app` installation and tested to see if the online suggestions I found actually worked with that. None of them did so either React 19 really screws with the examples I found or it is down to my ancient version of Node. One, perhaps, to revisit as and when I buy a new computer.
