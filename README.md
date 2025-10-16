@@ -266,8 +266,30 @@ But that didn't do the job either.
 
 ### Fifth (and final) iteration
 
-The final suggestion was to strip things all the way back anf just check that the `App` component can be imported and created. It worked (see `index.test.tsx`).
+The final suggestion was to strip things all the way back and just check that the `App` component can be imported and created. It worked (see `index.test.tsx`).
 
 This is though a smoke test rather than a unit test so when I look at the coverage it still says that there is no test coverage.
 
-For the sake of my own sanity I also spun up a default `creat-react-app` installation and tested to see if the online suggestions I found actually worked with that. None of them did so either React 19 really screws with the examples I found or it is down to my ancient version of Node. One, perhaps, to revisit as and when I buy a new computer.
+For the sake of my own sanity I also spun up a default `create-react-app` installation and tested to see if the online suggestions I found actually worked with that. None of them did so either React 19 really screws with the examples I found or it is down to my ancient version of Node. One, perhaps, to revisit as and when I buy a new computer.
+
+## 2025-10-15
+
+Writing tests for actions, reducers and selectors was straight forward once I'd engaged the brain cell for half a second. No need to write any for constants as there are no functions there.
+
+The coverage report says that store.ts:14 is uncovered but since this is the line which hooks in to Redux DevTools I shall ignore it.
+
+## 2025-10-16
+
+Mocking the `dataFetch` function so I can unit test it. Apparently I can do this [https://www.codementor.io/@chihebnabil/complete-guide-to-mocking-fetch-in-jest-2lejnjl4bs](without using mock service workers) but at this stage I don't know what I'm losing (integration tests, perhaps?) by not using them. One for he future once I've finished unit testing.
+
+Got a bit hung up trying to figure out the fail path (`utilities/index.ts:7`) so asked Claude and then asked it to run an eye over what I'd done over the last couple of days.
+
+Ignoring the occasional 'no need to test this, it is trivial' *cough* actions *cough* the helpful feedback was:
+1. Utilties: What if the JSON response is invalid?
+2. Reducers: What if the action doesn't match any of the options?
+3. Reducers: What if the state is undefined?
+4. Reducesr: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
+5. Selectors: Null/undefined state handling
+6. Selectors: Empty selectedTickers
+
+Tests added for everything but 4. Duplicates won't happen as the reducer adds or removes a ticker based on its presence or otherwise within the array. Not bothered by the persistence issue at this time.

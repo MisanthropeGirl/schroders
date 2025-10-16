@@ -16,7 +16,7 @@ export const setToDate = (payload: string): { type: string; payload: string } =>
 	};
 };
 
-export const setChartPricingOption = (payload: ChartPriceOptions): { type: string; payload: string } => {
+export const setChartPricingOption = (payload: ChartPriceOptions): { type: string; payload: ChartPriceOptions } => {
 	console.info(`Dispatching ${ACTION_TYPES.SET_CHART_PRICING_OPTION}`);
 	return {
 		type: ACTION_TYPES.SET_CHART_PRICING_OPTION,
