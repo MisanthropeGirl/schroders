@@ -10,7 +10,6 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  margin-bottom: 2rem;
 }
 
 .option-group > label {
@@ -22,10 +21,19 @@
   color: #000;
 }
 
+.dates-group {
+  margin-top: 2rem;
+}
+
 .dates-group > div:first-child {
   margin-right: 1rem;
 }
 
 .dates-group > div:last-child {
   margin-left: 1rem;
+}
+
+.dates-error {
+  margin-top: 1rem;
+  color: red;
 }
