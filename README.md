@@ -276,16 +276,16 @@ For the sake of my own sanity I also spun up a default `create-react-app` instal
 
 Writing tests for actions, reducers and selectors was straight forward once I'd engaged the brain cell for half a second. No need to write any for constants as there are no functions there.
 
-The coverage report says that store.ts:14 is uncovered but since this is the line which hooks in to Redux DevTools I shall ignore it.
+The coverage report says that `store.ts:14` is uncovered but since this is the line which hooks in to Redux DevTools I shall ignore it.
 
 ## 2025-10-16
 
-Mocking the `dataFetch` function so I can unit test it. Apparently I can do this [https://www.codementor.io/@chihebnabil/complete-guide-to-mocking-fetch-in-jest-2lejnjl4bs](without using mock service workers) but at this stage I don't know what I'm losing (integration tests, perhaps?) by not using them. One for he future once I've finished unit testing.
+Mocking the `dataFetch` function so I can unit test it. Apparently I can do this [https://www.codementor.io/@chihebnabil/complete-guide-to-mocking-fetch-in-jest-2lejnjl4bs](without using mock service workers) but at this stage I don't know what I'm losing (integration tests, perhaps?) by not using them. One for the future once I've finished unit testing.
 
 Got a bit hung up trying to figure out the fail path (`utilities/index.ts:7`) so asked Claude and then asked it to run an eye over what I'd done over the last couple of days.
 
 Ignoring the occasional 'no need to test this, it is trivial' *cough* actions *cough* the helpful feedback was:
-1. Utilties: What if the JSON response is invalid?
+1. Utilities: What if the JSON response is invalid?
 2. Reducers: What if the action doesn't match any of the options?
 3. Reducers: What if the state is undefined?
 4. Reducesr: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
@@ -293,3 +293,17 @@ Ignoring the occasional 'no need to test this, it is trivial' *cough* actions *c
 6. Selectors: Empty selectedTickers
 
 Tests added for everything but 4. Duplicates won't happen as the reducer adds or removes a ticker based on its presence or otherwise within the array. Not bothered by the persistence issue at this time.
+
+Claude also suggested some refactoring to reduce code repetition in the tests for actions and selectors.
+
+## 2025-10-22
+
+Added some error checking for the dates. Although min and max values have been set the MUI TextField allows users to breach these. Have I missed something in configuration or should I have used a lower level component, i.e. Input, rather than the wrapper?
+
+Added basic 'does it render without crashing tests' for each component and started on testing `ChartOptions`. Have tested the rendering and initialisation of the fields but can't figure out how to test the change event handlers (aside from the error conditions in the date one - albeit that testing to date is before from date is throwing an error despite my copying the code from the reverse test).
+
+## 2025-10-28
+
+Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch tself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
+
+Started out using `fireEvent` to simulate the user interactions but was pointed at `userEvent` instead. I understand that this is the better way of emulating them but trying to update inputs with `.type()` (or at least date inputs) requires clearing the input first - although that may just be because of Material UI.
