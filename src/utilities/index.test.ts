@@ -1,6 +1,6 @@
 import { convertObjectToString, dataFetch } from '.';
 import { POLYGON_LIST_URL } from '../constants';
-import { stockList } from './index.mock';
+import { stockList } from '../mocks';
 
 describe('convertObjectToString', () => {
   test('it will return an empty string if there is an empty object', () => {
