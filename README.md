@@ -307,3 +307,11 @@ Added basic 'does it render without crashing tests' for each component and start
 Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch tself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
 
 Started out using `fireEvent` to simulate the user interactions but was pointed at `userEvent` instead. I understand that this is the better way of emulating them but trying to update inputs with `.type()` (or at least date inputs) requires clearing the input first - although that may just be because of Material UI.
+
+## 2025-10-30
+
+Wrote the tests for `App.tsx` and `StockList.tsx` today. For the former just checking that it renders was enough for full coverage and that worked fine once I'd mock Highcharts.
+
+All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an elemnt to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [https://jestjs.io/docs/mock-functions](Mock Functions) part of the [JEST](Jest documentation) but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
+
+The only line which I have been unable to test is `if (selectedTickers.length < 3) {` as I can't fake the component in to having enabled checkboxes when the selectedTickers has three items. I did though try and the mock store was updated to include the ability to accept an initial state as a parameter. I could simply delete the offending if statement but it feels like a necessary piece of error checking just in case someone manages to get around Material UI's checkbox disabling.

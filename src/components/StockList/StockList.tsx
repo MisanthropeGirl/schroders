@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
 import { POLYGON_LIST_URL } from '../../constants';
@@ -11,7 +11,7 @@ function StockList() {
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
 
-  const selectedTickers = useSelector(selectSelectedTickers) || [];
+  const selectedTickers = useSelector(selectSelectedTickers);
 
   const dispatch = useDispatch()
 
@@ -37,8 +37,7 @@ function StockList() {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError(true);
-          throw err;
+          setError('There was an error. Please refer to the console.');
         }
         setData([])
       }
@@ -71,14 +70,14 @@ function StockList() {
   }
   
   if (error) {
-    return (<div>{(typeof error === 'string') ? error : 'There was an error. Please refer to the console.'}</div>);
+    return (<div>{error}</div>);
   } 
 
   return (
     // In the real world there would probably be fewer rows on show at any time
     // And there'd be pagination
     // And likely some price data
-    <Table size='small' stickyHeader>
+    <Table size='small' stickyHeader data-testid='stocklist'>
       <TableHead>
         <TableRow>
           <TableCell variant='head'></TableCell>
