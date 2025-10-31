@@ -35,8 +35,8 @@ function ChartOptions() {
       setDateError('The to date should be after the from date');
     } else {
       setDateError(false);
-      setFromDate(fromDate);
-      setToDate(toDate);
+      dispatch(setFromDate(fromDate));
+      dispatch(setToDate(toDate));
     }
   }
 

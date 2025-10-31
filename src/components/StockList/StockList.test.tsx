@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event';
 import StockList from './StockList';
 import { render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
-import { stockList } from '../../mocks';
+import { stockList } from '../../mocks/StockList';
 import * as utilities from '../../utilities';
 
 describe('StockList', () => {

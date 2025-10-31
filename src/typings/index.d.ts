@@ -46,6 +46,17 @@ interface StockData {
   vw?: number;
 }
 
+interface RawChartData {
+  ticker: string;
+  data: StockData[];
+}
+
+interface ChartData {
+  name: string;
+  type: string;
+  data: [number, number][];
+}
+
 interface SearchParams {
   active?: boolean;
   adjusted?: boolean;

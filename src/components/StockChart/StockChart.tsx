@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { dataFetch } from '../../utilities';
+import { dataFetch, dataTransform } from '../../utilities';
 import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
 import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
@@ -7,19 +7,8 @@ import './StockChart.css';
 import { useSelector } from "react-redux";
 import { selectFromDate, selectNewTicker, selectPriceOption, selectRemovedTicker, selectSelectedTickers, selectToDate } from "../../selectors";
 
-interface RawData {
-  ticker: string;
-  data: StockData[];
-}
-
-interface ChartData {
-  name: string;
-  type: string;
-  data: [number, number][];
-}
-
 function StockChart() {
-  const [data, setData] = useState<RawData[]>([]);
+  const [data, setData] = useState<RawChartData[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +22,6 @@ function StockChart() {
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
   const loadData = async (ticker: string, from: string = fromDate, to: string = toDate) => {
-    if (ticker === '') return;
     try {
       const stockData = await dataFetch(
         `${POLYGON_DATA_URL}/${ticker}/range/1/day/${from}/${to}`,
@@ -42,16 +30,19 @@ function StockChart() {
           sort: 'asc',
         }
       );
-
-      setData(data => { return [...data, { 'ticker': ticker, data: stockData.results }]});
+        
+      // remove existing data for the ticker
+      const temp = data.findIndex(d => d.ticker === ticker) > -1
+        ? data.filter(d => d.ticker !== ticker)
+        : data;
+      setData([...temp, { ticker, data: stockData.results }]);
       setError(false);
     }
     catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError(true);
-        throw err;
+        setError('There was an error. Please refer to the console.');
       }
       setData([]);
     }
@@ -61,13 +52,12 @@ function StockChart() {
   }
 
   useEffect(() => {
-    if (newTicker) {
+    if (newTicker && newTicker !== '') {
       loadData(newTicker);
     }
   }, [newTicker]);
 
   useEffect(() => {
-    setData([]);
     selectedTickers.map(ticker => loadData(ticker, fromDate, toDate));
   }, [fromDate, toDate]);
 
@@ -77,10 +67,16 @@ function StockChart() {
     }
   }, [removedTicker]);
 
+  useEffect(() => {
+    if (data.length === 0) {
+      setLoading(true);
+    }
+  }, [data])
+
   if (loading) {
     return (
       <div className="chart">
-        <div className="chartMsg">Awaiting data…</div>
+        <div className="chartMsg">Awaiting data</div>
       </div>
     );
   }
@@ -88,31 +84,16 @@ function StockChart() {
   if (error) {
     return (
       <div className="chart">
-        <div className="chartMsg">
-          {(typeof error === 'string') ? error : 'There was an error. Please refer to the console.'}
-        </div>
+        <div className="chartMsg">{error}</div>
       </div>
     );
   }
 
-  const transformData = (key: string): ChartData[] => {
-    return data.map(stock => {
-      return ({
-        type: 'line',
-        'name': stock.ticker,
-        'data': stock.data.map(it => [
-          it[PRICE_SERIES_CODES.TIME as keyof StockData] as number,
-          it[key as keyof StockData] as number
-        ])
-      })
-    });
-  }
-
   const transformedData: { [key: string]: ChartData[] } = {};
-  transformedData['Close'] = transformData(PRICE_SERIES_CODES.CLOSE);
-  transformedData['High'] = transformData(PRICE_SERIES_CODES.HIGH);
-  transformedData['Low'] = transformData(PRICE_SERIES_CODES.LOW);
-  transformedData['Open'] = transformData(PRICE_SERIES_CODES.OPEN);
+  transformedData['Open'] = dataTransform(data, PRICE_SERIES_CODES.OPEN);
+  transformedData['High'] = dataTransform(data, PRICE_SERIES_CODES.HIGH);
+  transformedData['Low'] = dataTransform(data, PRICE_SERIES_CODES.LOW);
+  transformedData['Close'] = dataTransform(data, PRICE_SERIES_CODES.CLOSE);
 
   const chartOptions: Highcharts.Options = {
     chart: {
@@ -145,7 +126,7 @@ function StockChart() {
   };
 
   return (
-    <div className="chart">
+    <div className="chart" data-testid='stockchart'>
       <HighchartsReact
         highcharts={Highcharts}
         options={chartOptions}
