@@ -1,14 +1,14 @@
-import { ChangeEvent, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, RadioInputSlotPropsOverrides, TextField } from "@mui/material";
-import { setFromDate, setToDate, setChartPricingOption } from "../../actions";
-import { DATE_MAX, DATE_MIN } from "../../constants";
+import { ChangeEvent, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, RadioInputSlotPropsOverrides, TextField } from '@mui/material';
+import { setFromDate, setToDate, setChartPricingOption } from '../../actions';
+import { DATE_MAX, DATE_MIN } from '../../constants';
 import './ChartOptions.css';
 
 export const chartPriceOptions = ['Close', 'High', 'Low', 'Open'] as const;
 
 interface MyRadioInputSlotPropsOverrides extends RadioInputSlotPropsOverrides {
-  "data-testid"?: string;
+  'data-testid'?: string;
 }
 
 function ChartOptions() {
@@ -34,6 +34,8 @@ function ChartOptions() {
     } else if (source === 'to' && newDate <= fromDate) {
       setDateError('The to date should be after the from date');
     } else {
+      // dispatching both here because if the user changed one date resulting in failed validation and
+      // then changed the other date resulting in failing passing then both will need to be dispatched
       setDateError(false);
       dispatch(setFromDate(fromDate));
       dispatch(setToDate(toDate));
@@ -41,13 +43,13 @@ function ChartOptions() {
   }
 
   return (
-    <div className="container">
-      <FormControl className="option-group">
-        <FormLabel id="radio-buttons-group-label">View prices for day…</FormLabel>
+    <div className='container'>
+      <FormControl className='option-group'>
+        <FormLabel id='radio-buttons-group-label'>View prices for day…</FormLabel>
         <RadioGroup
           row
-          aria-labelledby="radio-buttons-group-label"
-          name="row-radio-buttons-group"
+          aria-labelledby='radio-buttons-group-label'
+          name='row-radio-buttons-group'
           onChange={handlePriceOptionChange}
           defaultValue={chartPriceOptions[0]}
         >
@@ -55,7 +57,7 @@ function ChartOptions() {
             return (
               <FormControlLabel
                 key={index}
-                control={<Radio slotProps={{input: { "data-testid": `radio-${option}` } as MyRadioInputSlotPropsOverrides}} />}
+                control={<Radio slotProps={{input: { 'aria-label': `Select ${option}`, 'data-testid': `radio-${option}` } as MyRadioInputSlotPropsOverrides}} />}
                 label={option}
                 value={option}
               />
@@ -64,25 +66,25 @@ function ChartOptions() {
         </RadioGroup>
       </FormControl>
 
-      <div className="dates-group">
+      <div className='dates-group'>
         <TextField
-          id="from-date"
-          label="From date"
-          type="date"
-          slotProps={{htmlInput: { ref: fromDateEl, min: DATE_MIN, max: DATE_MAX, "data-source": "from", "data-testid": "from-date"}, inputLabel: { shrink: true }}}
+          id='from-date'
+          label='From date'
+          type='date'
+          slotProps={{htmlInput: { ref: fromDateEl, min: DATE_MIN, max: DATE_MAX, 'data-source': 'from', 'data-testid': 'from-date'}, inputLabel: { shrink: true }}}
           onChange={handleDateChange}
           defaultValue={DATE_MIN}
         />
         <TextField
-          id="to-date"
-          label="To date"
-          type="date"
-          slotProps={{htmlInput: { ref: toDateEl, min: DATE_MIN, max: DATE_MAX, "data-source": "to", "data-testid": "to-date"}, inputLabel: { shrink: true }}}
+          id='to-date'
+          label='To date'
+          type='date'
+          slotProps={{htmlInput: { ref: toDateEl, min: DATE_MIN, max: DATE_MAX, 'data-source': 'to', 'data-testid': 'to-date'}, inputLabel: { shrink: true }}}
           onChange={handleDateChange}
           defaultValue={DATE_MAX}
         />
       </div>
-      {dateError && (<div className="dates-error">{dateError}</div>)}
+      {dateError && (<div className='dates-error'>{dateError}</div>)}
     </div>
   );
 }

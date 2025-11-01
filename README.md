@@ -323,3 +323,33 @@ Wrote the tests for `stockChart.tsx`. Mostly straightforward - except for when I
 Moved the `dataTransform` function to `utilities.tsx` so I could test it in isolation.
 
 If I exclude the files added when I was using mock service workers and `reportWebVitals.ts` then overall test coverage is close to 100%. Even with them in it is over 90%. It's mainly the lack of testing for `index.tsx` (see above) which is dragging it down so I'm going to declare myself satisifed wth my efforts. I may tomorrow though run everything through Claude and ask it to point out any potential improvements. After that, it is time to see what integration and end-to-end testing can potentially be applied.
+
+## 2025-11-01
+
+I have now run the tests for the components and utilities past Claude with the prompt of "What am I missing? What could I do better?" and incorporated much (but not all) of the feedback.
+
+Relevant feedback for each was as follows;
+
+### `utilities.ts`
+1. Handle special cases in `convertObjectToString`. I'm not URL-encoding values as the API documentation didn't mention it.
+2. Handle an empty array being passed to `dataTransform`.
+3. Checking that the object parameters passed to `dataFetch` are in the queryString.
+
+### `ChartOptions.tsx`
+1. Testing the happy path thoroughly. No tests for successful `fromDate` and `toDate` changes or for when one date is initially invalid but becomes valid when the second date changes.
+2. Edge case around ewual dates
+3. Radio button accessibility
+
+### `StockList.tsx`
+1. Avoiding repetition
+2. Unchecking a checkbox
+3. Magic numbers
+4. Radio button accessibility
+5. Currency potentially missing in the API output
+
+As well as suggesting tests for the defensive coding of line 56 and dealing with some data persistence between tests.
+
+### `StockChart.tsx`
+1. Hadn't tested that things work correctly when the date range or the price option change. Doing the former took care testing line 36 (obvious really).
+2. More testing around adding and emoving tickers, including adding 2 or more.
+3. Handing the if statements around the `newTicker` and `removedTicker` actions.

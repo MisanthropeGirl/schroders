@@ -23,5 +23,6 @@ export const ACTION_TYPES = {
 
 // only have access to the last two years
 export const DATE_MAX = format(new Date(), 'yyyy-MM-dd');
+export const DATE_MIDDLE = format(subYears(DATE_MAX, 1), 'yyyy-MM-dd');
 export const DATE_MIN = format(subYears(DATE_MAX, 2), 'yyyy-MM-dd');
 

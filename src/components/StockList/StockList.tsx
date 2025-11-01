@@ -93,7 +93,12 @@ function StockList() {
           return (
             <TableRow key={index} hover>
               <TableCell>
-                <Checkbox value={stock.ticker} disabled={selectedTickers.length > 2 && !selectedTickers.includes(stock.ticker)} onChange={handleClickEvent} />
+                <Checkbox
+                  value={stock.ticker}
+                  disabled={selectedTickers.length > 2 && !selectedTickers.includes(stock.ticker)}
+                  slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
+                  onChange={handleClickEvent}
+                />
               </TableCell>
               <TableCell>{stock.ticker}</TableCell>
               <TableCell>{stock.name}</TableCell>

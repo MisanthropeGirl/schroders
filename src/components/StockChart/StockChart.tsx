@@ -55,15 +55,20 @@ function StockChart() {
     if (newTicker && newTicker !== '') {
       loadData(newTicker);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newTicker]);
 
   useEffect(() => {
-    selectedTickers.map(ticker => loadData(ticker, fromDate, toDate));
+    if (selectedTickers.length > 0) {
+      selectedTickers.forEach(ticker => loadData(ticker, fromDate, toDate));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDate, toDate]);
 
   useEffect(() => {
     if (removedTicker && removedTicker !== '') {
-      setData(d => d.filter(it => it.ticker !== removedTicker));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setData(d => d.filter(it => it.ticker !== removedTicker));
     }
   }, [removedTicker]);
 

@@ -115,130 +115,18 @@ A_CHART_DATA['High'] = dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.HIGH);
 A_CHART_DATA['Low'] = dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.LOW);
 A_CHART_DATA['Close'] = dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.CLOSE);
 
-// export const A_DATE_RANGE: StockData[] = A.slice(3, 6);
+export const A_DATE_RANGE: StockData[] = A.slice(3, 6);
 
-// const A_DATE_RANGE_RAW_CHART_DATA: RawChartData[] = [{
-//   ticker: 'A',
-//   data: A_DATE_RANGE
-// }];
-
-// export const A_DATE_RANGE_CHART_DATA: { [key: string]: ChartData[] } = {};
-// A_DATE_RANGE_CHART_DATA['Open'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.OPEN);
-// A_DATE_RANGE_CHART_DATA['High'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.HIGH);
-// A_DATE_RANGE_CHART_DATA['Low'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.LOW);
-// A_DATE_RANGE_CHART_DATA['Close'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.CLOSE);
-
-export const AA: StockData[] = [
-  {
-      "v": 9.442581e+06,
-      "vw": 24.8596,
-      "o": 24,
-      "c": 25.32,
-      "h": 25.425,
-      "l": 23.8501,
-      "t": 1698638400000,
-      "n": 69753
-  },
-  {
-      "v": 5.156478e+06,
-      "vw": 25.5835,
-      "o": 25.28,
-      "c": 25.64,
-      "h": 25.89,
-      "l": 24.84,
-      "t": 1698724800000,
-      "n": 43789
-  },
-  {
-      "v": 6.202053e+06,
-      "vw": 24.9568,
-      "o": 25.67,
-      "c": 25.03,
-      "h": 25.78,
-      "l": 24.275,
-      "t": 1698811200000,
-      "n": 46926
-  },
-  {
-      "v": 5.825331e+06,
-      "vw": 25.7923,
-      "o": 25.5,
-      "c": 26.07,
-      "h": 26.142,
-      "l": 25.295,
-      "t": 1698897600000,
-      "n": 44315
-  },
-  {
-      "v": 5.479951e+06,
-      "vw": 26.5314,
-      "o": 26.5,
-      "c": 26.53,
-      "h": 27.005,
-      "l": 26.14,
-      "t": 1698984000000,
-      "n": 46145
-  },
-  {
-      "v": 3.869527e+06,
-      "vw": 26.0804,
-      "o": 26.71,
-      "c": 25.97,
-      "h": 26.73,
-      "l": 25.76,
-      "t": 1699246800000,
-      "n": 32978
-  },
-  {
-      "v": 4.852895e+06,
-      "vw": 25.3437,
-      "o": 25.22,
-      "c": 25.54,
-      "h": 25.595,
-      "l": 24.82,
-      "t": 1699333200000,
-      "n": 37582
-  },
-  {
-      "v": 3.671356e+06,
-      "vw": 25.3451,
-      "o": 25.12,
-      "c": 25.53,
-      "h": 25.66,
-      "l": 24.965,
-      "t": 1699419600000,
-      "n": 30055
-  },
-  {
-      "v": 4.078496e+06,
-      "vw": 24.8878,
-      "o": 25.81,
-      "c": 24.58,
-      "h": 25.87,
-      "l": 24.41,
-      "t": 1699506000000,
-      "n": 32164
-  },
-  {
-      "v": 3.040197e+06,
-      "vw": 24.5455,
-      "o": 24.7,
-      "c": 24.64,
-      "h": 24.8899,
-      "l": 24.28,
-      "t": 1699592400000,
-      "n": 25987
-  }
-];
-export const AA_RAW_CHART_DATA: RawChartData[] = [{
-  ticker: 'AA',
-  data: AA
+const A_DATE_RANGE_RAW_CHART_DATA: RawChartData[] = [{
+  ticker: 'A',
+  data: A_DATE_RANGE
 }];
 
-export const AA_CHART_DATA: { [key: string]: ChartData[] } = {};
-AA_CHART_DATA['Open'] = dataTransform(AA_RAW_CHART_DATA, PRICE_SERIES_CODES.OPEN);
-AA_CHART_DATA['High'] = dataTransform(AA_RAW_CHART_DATA, PRICE_SERIES_CODES.HIGH);
-AA_CHART_DATA['Low'] = dataTransform(AA_RAW_CHART_DATA, PRICE_SERIES_CODES.LOW);
-AA_CHART_DATA['Close'] = dataTransform(AA_RAW_CHART_DATA, PRICE_SERIES_CODES.CLOSE);
+export const A_DATE_RANGE_CHART_DATA: { [key: string]: ChartData[] } = {};
+A_DATE_RANGE_CHART_DATA['Open'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.OPEN);
+A_DATE_RANGE_CHART_DATA['High'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.HIGH);
+A_DATE_RANGE_CHART_DATA['Low'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.LOW);
+A_DATE_RANGE_CHART_DATA['Close'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.CLOSE);
 
-// export const AA_DATE_RANGE: StockData[] = AA.slice(3, 6);
+export const AA: StockData[] = A;
+export const AAM: StockData[] = A;
