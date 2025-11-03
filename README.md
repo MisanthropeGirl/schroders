@@ -1,23 +1,23 @@
 # Schroder's technical test
 
-My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, sarting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistence.
+My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, starting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistence.
 
 This is not a read me in the traditional sense but rather a diary of thngs I learnt/fought with along the way.
 
 ## 2025-10-04
 
-Added old school style Redux (aka what I know thanks to my time at F1000). This is the first time I've done this from scratch (HL, GN and IT did this work for F1000) so it was all about seeing if I actually understood what I thought I did from that time.
+Added old school style Redux (aka what I know thanks to my time at F1000). This is the first time I've done this from scratch (Helen L, Goran N and Igot T did this work for F1000) so it was all about seeing if I actually understood what I thought I did from that time.
 
 Bit of a faff (some of which was removing the prop-drilling I had initially gone with). I have set an initial state for several parameters which I believe makes sense in the circumstances.
 
-The biggest fight I had was with getting Redux DevTools to acknowledge the store. AIUI the lack of middleware in the store in this iteration is the reason for this which is why I've had to [https://github.com/zalmoxisus/redux-devtools-extension/blob/master/docs/Recipes.md#using-in-a-typescript-project](explicitly link them up).
+The biggest fight I had was with getting Redux DevTools to acknowledge the store. AIUI the lack of middleware in the store in this iteration is the reason for this which is why I've had to [explicitly link them up](https://github.com/zalmoxisus/redux-devtools-extension/blob/master/docs/Recipes.md#using-in-a-typescript-project).
 
 
 ## 2025-10-10
 
 Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistence, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
 
-Not knowing where to start, I took the sensible course and went looking to see [https://stackoverflow.com/questions/43044696/test-a-create-react-app-index-js-file](how others) have [https://joaoforja.com/blog/how-to-test-a-rect-app-indexjs](gone about it).
+Not knowing where to start, I took the sensible course and went looking to see [how others](https://stackoverflow.com/questions/43044696/test-a-create-react-app-index-js-file) have [gone about it](https://joaoforja.com/blog/how-to-test-a-rect-app-indexjs).
 
 ### First iteration
 
@@ -280,7 +280,7 @@ The coverage report says that `store.ts:14` is uncovered but since this is the l
 
 ## 2025-10-16
 
-Mocking the `dataFetch` function so I can unit test it. Apparently I can do this [https://www.codementor.io/@chihebnabil/complete-guide-to-mocking-fetch-in-jest-2lejnjl4bs](without using mock service workers) but at this stage I don't know what I'm losing (integration tests, perhaps?) by not using them. One for the future once I've finished unit testing.
+Mocking the `dataFetch` function so I can unit test it. Apparently I can do this [without using mock service workers](https://www.codementor.io/@chihebnabil/complete-guide-to-mocking-fetch-in-jest-2lejnjl4bs) but at this stage I don't know what I'm losing (integration tests, perhaps?) by not using them. One for the future once I've finished unit testing.
 
 Got a bit hung up trying to figure out the fail path (`utilities/index.ts:7`) so asked Claude and then asked it to run an eye over what I'd done over the last couple of days.
 
@@ -310,9 +310,9 @@ Started out using `fireEvent` to simulate the user interactions but was pointed 
 
 ## 2025-10-29
 
-Wrote the tests for `App.tsx` and `StockList.tsx` today. For the former just checking that it renders was enough for full coverage and that worked fine once I'd mock Highcharts.
+Wrote the tests for `App.tsx` and `StockList.tsx` today. For the former just checking that it renders was enough for full coverage and that worked fine once I'd mocked Highcharts.
 
-All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an elemnt to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [https://jestjs.io/docs/mock-functions](Mock Functions) part of the [JEST](Jest documentation) but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
+All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an elemnt to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [Mock Functions](https://jestjs.io/docs/mock-functions]) part of the Jest documentation but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
 
 The only line which I have been unable to test fully is line 56 as I can't fake the component in to having enabled checkboxes when the selectedTickers has three items. I did though try and the mock store was updated to include the ability to accept an initial state as a parameter. I could simply delete the offending if statement but it feels like a necessary piece of error checking just in case someone manages to get around Material UI's checkbox disabling.
 
@@ -337,7 +337,7 @@ Relevant feedback for each was as follows;
 
 ### `ChartOptions.tsx`
 1. Testing the happy path thoroughly. No tests for successful `fromDate` and `toDate` changes or for when one date is initially invalid but becomes valid when the second date changes.
-2. Edge case around ewual dates
+2. Edge case around equal dates
 3. Radio button accessibility
 
 ### `StockList.tsx`
@@ -351,5 +351,5 @@ As well as suggesting tests for the defensive coding of line 56 and dealing with
 
 ### `StockChart.tsx`
 1. Hadn't tested that things work correctly when the date range or the price option change. Doing the former took care testing line 36 (obvious really).
-2. More testing around adding and emoving tickers, including adding 2 or more.
+2. More testing around adding and removing tickers, including adding 2 or more.
 3. Handing the if statements around the `newTicker` and `removedTicker` actions.
