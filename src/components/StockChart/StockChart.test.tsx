@@ -1,5 +1,5 @@
 import StockChart from './StockChart';
-import { render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
+import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
 import { setChartPricingOption, setFromDate, setNewTicker, setRemovedTicker } from '../../actions';
 import { DATE_MIDDLE } from '../../constants';
 import { A, A_DATE_RANGE, AA, AAM } from '../../mocks/Stocks';
@@ -93,7 +93,7 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    store.dispatch(setNewTicker('A'));
+    act(() => store.dispatch(setNewTicker('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
@@ -113,9 +113,9 @@ describe('StockChart', () => {
       expect(chart).toBeInTheDocument();
     });
 
-    store.dispatch(setRemovedTicker('A'));
+    act(() => store.dispatch(setRemovedTicker('A')));
 
-    await waitForElementToBeRemoved(() => screen.queryByTestId('stockchart'));
+    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
   });
 
@@ -125,14 +125,14 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    store.dispatch(setNewTicker('A'));
+    act(() => store.dispatch(setNewTicker('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
 
-    store.dispatch(setRemovedTicker('A'));
+    act(() => store.dispatch(setRemovedTicker('A')));
 
-    await waitForElementToBeRemoved(() => screen.queryByTestId('stockchart'));
+    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
   });
 
@@ -154,7 +154,7 @@ describe('StockChart', () => {
     // Should have been called once initially
     expect(dataFetchSpy).toHaveBeenCalledTimes(1);
 
-    store.dispatch(setNewTicker('AA'));
+    act(() => store.dispatch(setNewTicker('AA')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));
@@ -165,7 +165,7 @@ describe('StockChart', () => {
       expect.any(Object)
     );
 
-    store.dispatch(setNewTicker('AAM'));
+    act(() => store.dispatch(setNewTicker('AAM')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(3));
@@ -185,7 +185,7 @@ describe('StockChart', () => {
 
     const { store } = render(<StockChart />);
 
-    store.dispatch(setNewTicker(''));
+    act(() => store.dispatch(setNewTicker('')));
 
     expect(dataFetchSpy).not.toHaveBeenCalled();
   });
@@ -202,7 +202,7 @@ describe('StockChart', () => {
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
-    store.dispatch(setRemovedTicker(''));
+    act(() => store.dispatch(setRemovedTicker('')));
 
     // Chart should still be visible (data not removed)
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
@@ -222,7 +222,7 @@ describe('StockChart', () => {
       expect(chart).toBeInTheDocument();
     });
 
-    store.dispatch(setChartPricingOption('High'));
+    act(() => store.dispatch(setChartPricingOption('High')));
 
     // Chart should still be visible
     // Tried to test for the change to the chart title but the chart isn't being rendered
@@ -245,7 +245,7 @@ describe('StockChart', () => {
     // Should have been called once initially
     expect(dataFetchSpy).toHaveBeenCalledTimes(1);
 
-    store.dispatch(setFromDate(DATE_MIDDLE));
+    act(() => store.dispatch(setFromDate(DATE_MIDDLE)));
 
     // Should call dataFetch again for the new date range
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));

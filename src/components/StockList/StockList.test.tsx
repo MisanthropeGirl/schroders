@@ -13,17 +13,7 @@ describe('StockList', () => {
     jest.restoreAllMocks();
   });
 
-  test('it renders without crashing', () => {
-    render(<StockList />);
-  });
-
-  test('it should initially show a loading message', () => {
-    render(<StockList />);
-
-    expect(screen.queryByText('Loading table')).toBeInTheDocument();
-  });
-
-  test('it should eventually hide the loading message and show a table', async () => {
+  test('it renders without crashing', async () => {
     render(<StockList />);
 
     await waitForElementToBeRemoved(() => screen.queryByText('Loading table'))

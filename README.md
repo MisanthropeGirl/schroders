@@ -353,3 +353,9 @@ As well as suggesting tests for the defensive coding of line 56 and dealing with
 1. Hadn't tested that things work correctly when the date range or the price option change. Doing the former took care testing line 36 (obvious really).
 2. More testing around adding and removing tickers, including adding 2 or more.
 3. Handing the if statements around the `newTicker` and `removedTicker` actions.
+
+## 2025-11-05
+
+Did some reading around integration testing, eventually realising that what the various writers were describing I had been doing when I was writing the tests for the components. I can live with that. Time to move on to looking at end to end testing then. AIUI that'll be using either 'Selenium' or 'Cypress' but we'll see what some reading throws up.
+
+Eliminated the `act()` errors. For `StockList.test.tsx` this involved merging the first three tests in to one (something which made sense anyway) and for `StockChart.test.tsx` wrapping all of the `store.dispatch()` calls in an `act(() => {})` call.
