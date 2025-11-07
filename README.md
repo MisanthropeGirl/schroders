@@ -359,3 +359,7 @@ As well as suggesting tests for the defensive coding of line 56 and dealing with
 Did some reading around integration testing, eventually realising that what the various writers were describing I had been doing when I was writing the tests for the components. I can live with that. Time to move on to looking at end to end testing then. AIUI that'll be using either 'Selenium' or 'Cypress' but we'll see what some reading throws up.
 
 Eliminated the `act()` errors. For `StockList.test.tsx` this involved merging the first three tests in to one (something which made sense anyway) and for `StockChart.test.tsx` wrapping all of the `store.dispatch()` calls in an `act(() => {})` call.
+
+# 2025-11-07
+
+I'd forgotten about playwright. OK, that's not quite true; I hadn't twigged it was an end to end testing library. I've therefore installed it (v1.48.2 because of the MacOS version on this MacBook and the limitations of my of node.js version) and shall proceed to read the docs. `npx playwright install` gave me problems for a bit because it wouldn't install WebKit (again, machine age related) but `npx playwright install [firefox|chromium]` got around that.
