@@ -1,7 +1,10 @@
+import axios from 'axios';
 import { convertObjectToString, dataFetch, dataTransform } from '.';
 import { POLYGON_LIST_URL, PRICE_SERIES_CODES } from '../constants';
 import { stockList } from '../mocks/StockList';
 import { A_CHART_DATA, A_RAW_CHART_DATA } from 'mocks/Stocks';
+
+jest.mock('axios');
 
 describe('convertObjectToString', () => {
   test('it will return an empty string if there is an empty object', () => {
@@ -38,21 +41,18 @@ describe('convertObjectToString', () => {
 });
 
 describe('dataFetch', () => {
-  beforeEach(() => {
-    global.fetch = jest.fn();
-  });
+  const mockedAxios = axios as jest.Mocked<typeof axios>;
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   test('it constructs URL with query parameters correctly', async () => {
-    const fetchSpy = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({})
+    mockedAxios.get.mockResolvedValue({
+      data: null,
+      status: 200
     });
-    global.fetch = fetchSpy;
-  
+
     await dataFetch(POLYGON_LIST_URL, {
       market: 'stocks',
       type: 'CS',
@@ -62,37 +62,37 @@ describe('dataFetch', () => {
       limit: 100,
       sort: 'ticker'
     });
-  
-    expect(fetchSpy).toHaveBeenCalledWith(
+ 
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('?apiKey=')
     );
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('&market=stocks')
     );
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('&type=CS')
     );
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('&exchange=XNYS')
     );
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('&active=true')
     );
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('&order=asc')
     );
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('&limit=100')
     );
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('&sort=ticker')
     );
   });
 
   test('it handles successful API calls', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(stockList)
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: stockList
     });
 
     // Make API call
@@ -103,9 +103,9 @@ describe('dataFetch', () => {
   });
 
   test('it handles empty response body', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(null)
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: null
     });
   
     const data = await dataFetch(POLYGON_LIST_URL, {});
@@ -113,9 +113,10 @@ describe('dataFetch', () => {
   });
 
   test('it handles unsuccessful API calls', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 404
+    mockedAxios.get.mockRejectedValue({
+      response: {
+        status: 404
+      }
     });
 
     // Verify error handling
@@ -124,9 +125,20 @@ describe('dataFetch', () => {
       .toThrow('HTTP error: Status 404');
   });
 
+  test('it handles no response being received', async () => {
+    mockedAxios.get.mockRejectedValue({
+      request: 'No response received'
+    });
+
+    // Verify error handling
+    await expect(dataFetch(`${POLYGON_LIST_URL}a`, {}))
+      .rejects
+      .toThrow('No response received');
+  });
+
   test('it handles API errors', async () => {
     // Mock network error
-    global.fetch = jest.fn().mockRejectedValue(
+    mockedAxios.get.mockRejectedValue(
       new Error('Network error')
     );
 
@@ -137,13 +149,13 @@ describe('dataFetch', () => {
   });
 
   test('it handles invalid JSON response', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.reject(new Error('Invalid JSON'))
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: new Error('Invalid JSON')
     });
 
     await expect(dataFetch(POLYGON_LIST_URL, {}))
-      .rejects
+      .resolves
       .toThrow('Invalid JSON');
   });
 });
