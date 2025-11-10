@@ -1,12 +1,28 @@
+import axios from 'axios';
 import { POLYGON_API_KEY, PRICE_SERIES_CODES } from './../constants';
 
 export const dataFetch = async (url: string, options: SearchParams) => {
-  const params = convertObjectToString(options);
-  const response = await fetch(`${url}?apiKey=${POLYGON_API_KEY}${params}`);
-  if (!response.ok) {
-    throw new Error(`HTTP error: Status ${response.status}`);
+  try {
+    const params = convertObjectToString(options);
+    // const response = await axios.get(`${url}?apiKey=${POLYGON_API_KEY}${params}`);
+    const response = await axios.get(`${url}?apiKey=${POLYGON_API_KEY}${params}`);
+    return response.data;
   }
-  return await response.json();
+  catch(error: any) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      throw new Error(`HTTP error: Status ${error.response.status}`);
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      throw new Error(error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      throw new Error(error.message);
+    }
+  }
 };
 
 export const convertObjectToString = (obj: object): string => {
