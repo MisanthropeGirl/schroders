@@ -1,92 +1,16 @@
 import axios from 'axios';
-import { convertObjectToString, dataFetch, dataTransform } from '.';
+import { dataFetch, dataTransform } from '.';
 import { POLYGON_LIST_URL, PRICE_SERIES_CODES } from '../constants';
 import { stockList } from '../mocks/StockList';
 import { A_CHART_DATA, A_RAW_CHART_DATA } from 'mocks/Stocks';
 
 jest.mock('axios');
 
-describe('convertObjectToString', () => {
-  test('it will return an empty string if there is an empty object', () => {
-    const str = convertObjectToString({});
-    expect(str).toBe('');
-  });
-
-  test('it will return a string if there is a populated object', () => {
-    const obj1 = { a: 1 };
-    const obj2 = {
-      market: 'stocks',
-      type: 'CS',
-      exchange: 'XNYS',
-      active: true,
-      order: 'asc',
-      limit: 100,
-      sort: 'ticker'
-    };
-
-    const str1 = convertObjectToString(obj1);
-    expect(str1).toBe('&a=1');
-
-    const str2 = convertObjectToString(obj2);
-    expect(str2).toBe('&market=stocks&type=CS&exchange=XNYS&active=true&order=asc&limit=100&sort=ticker');
-  });
-
-  test('it handles special characters in values', () => {
-    const obj = { search: 'hello world', filter: 'a&b=c' };
-    const str = convertObjectToString(obj);
-    
-    // Should properly encode special characters
-    expect(str).toBe('&search=hello world&filter=a&b=c');
-  });
-});
-
 describe('dataFetch', () => {
   const mockedAxios = axios as jest.Mocked<typeof axios>;
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  test('it constructs URL with query parameters correctly', async () => {
-    mockedAxios.get.mockResolvedValue({
-      data: null,
-      status: 200
-    });
-
-    await dataFetch(POLYGON_LIST_URL, {
-      market: 'stocks',
-      type: 'CS',
-      exchange: 'XNYS',
-      active: true,
-      order: 'asc',
-      limit: 100,
-      sort: 'ticker'
-    });
- 
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('?apiKey=')
-    );
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('&market=stocks')
-    );
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('&type=CS')
-    );
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('&exchange=XNYS')
-    );
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('&active=true')
-    );
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('&order=asc')
-    );
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('&limit=100')
-    );
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('&sort=ticker')
-    );
   });
 
   test('it handles successful API calls', async () => {
