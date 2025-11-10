@@ -371,3 +371,5 @@ I may have spoken too soon. I changed the tests in the example to be a single on
 ## 2025-11-10
 
 Since the playwright setup includes GitHub actions I thought I might commit this single test, push it and see what happens. If this doesn't work then I'll uninstall playwright and come back to it at a later time.
+
+Update: It didn't work. The GitHub action complained about redux and its dependencies. Another push to get me to buy a new machine!
