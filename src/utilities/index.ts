@@ -3,9 +3,12 @@ import { POLYGON_API_KEY, PRICE_SERIES_CODES } from "./../constants";
 
 export const dataFetch = async (url: string, options: SearchParams) => {
   try {
-    const params = convertObjectToString(options);
-    // const response = await axios.get(`${url}?apiKey=${POLYGON_API_KEY}${params}`);
-    const response = await axios.get(`${url}?apiKey=${POLYGON_API_KEY}${params}`);
+    const response = await axios.get(url, {
+      params: {
+        apiKey: POLYGON_API_KEY,
+        ...options,
+      },
+    });
     return response.data;
   } catch (error: any) {
     if (error.response) {
@@ -22,12 +25,6 @@ export const dataFetch = async (url: string, options: SearchParams) => {
       throw new Error(error.message);
     }
   }
-};
-
-export const convertObjectToString = (obj: object): string => {
-  return Object.entries(obj).reduce((str, [key, val]) => {
-    return `${str}&${key}=${val}`;
-  }, "");
 };
 
 export const dataTransform = (data: RawChartData[], key: string): ChartData[] => {

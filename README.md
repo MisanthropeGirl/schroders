@@ -505,3 +505,5 @@ Thus `axios = jest.fn().mockResolvedValue()` become `mockedValue.get.mockResolve
 It turned out that the 'mistake' was using `axios(url)` rather than `axious.get(url)` in the `dataFetch`. Not that I could see that but Claude told me that I was being a muppet. It suggested some changes to the tests but the simpler change was to update `dataFetch`.
 
 After that all of the happy path tests fell in to place but a couple of the fail path ones needed a bit more tweaking.
+
+Since `axios` will take any parameters as an object I no longer need to stringify them myself so I can remove the `convertObjectToString` function and everything associated with it.
