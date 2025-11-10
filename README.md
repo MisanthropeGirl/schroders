@@ -473,7 +473,7 @@ With the setup in place moving from using Jest to MSW was generally simply (we'l
 
 ## 2025-11-10 (PM)
 
-*Dates are out of order as everything from this point onwards is the branch rather than the base*
+_Dates are out of order as everything from this point onwards is the branch rather than the base_
 
 Now that the basics are all in place (playwright excepted), it's time to look at changing it using various other available tools. First up, it's replacing the use of `fetch` with `axios`.
 
@@ -502,7 +502,7 @@ The top line has to be at the same level of the import but the second one is qui
 
 Thus `axios = jest.fn().mockResolvedValue()` become `mockedValue.get.mockResolvedValue()` but resulted in the output being undefined rather than the mocked result I was expecting.
 
-It turned out that the 'mistake' was using `axios(url)` rather than `axious.get(url)` in the `dataFetch`. Not that I could see that but Claude told me that I was being a muppet. It suggested some changes to the tests but the simpler change was to update `dataFetch`.
+It turned out that the 'mistake' was using `axios(url)` rather than `axios.get(url)` in the `dataFetch`. Not that I could see that but Claude told me that I was being a muppet. It suggested some changes to the tests but the simpler change was to update `dataFetch`.
 
 After that all of the happy path tests fell in to place but a couple of the fail path ones needed a bit more tweaking.
 
