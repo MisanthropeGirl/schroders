@@ -1,6 +1,6 @@
 {
   "name": "schroders",
-  "version": "0.2.16",
+  "version": "0.3.0",
   "private": true,
   "browserslist": {
     "production": [
@@ -27,6 +27,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
+    "axios": "^1.13.2",
     "date-fns": "^4.1.0",
     "highcharts": "^12.4.0",
     "highcharts-react-official": "^3.2.2",
@@ -73,6 +74,9 @@
         "functions": 95,
         "lines": 95
       }
+    },
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
     }
   }
 }

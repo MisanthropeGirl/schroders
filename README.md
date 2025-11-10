@@ -375,7 +375,7 @@ I'd forgotten about playwright. OK, that's not quite true; I hadn't twigged it w
 
 I may have spoken too soon. I changed the tests in the example to be a single one which checked for 'schroders' in the page title and it still failed when I ran it. I either need an earlier version (no idea which) or to stopping fannying around and buy myself a new computer.
 
-## 2025-11-10
+## 2025-11-10 (AM)
 
 Since the playwright setup includes GitHub actions I thought I might commit this single test, push it and see what happens. If this doesn't work then I'll uninstall playwright and come back to it at a later time.
 
@@ -470,3 +470,38 @@ With the setup in place moving from using Jest to MSW was generally simply (we'l
 
 1. MSW for HTTP interactions/network requests, Jest for everything else. Simple enough but I spent some time trying to figure out how to test a non-network error before I was disabused of the idea.
 2. I [shouldn't do assertion tests](https://mswjs.io/docs/best-practices/avoid-request-assertions/) like `expect(url).toHaveBeenLastCalledWith()` on intercepted requests.
+
+## 2025-11-10 (PM)
+
+*Dates are out of order as everything from this point onwards is the branch rather than the base*
+
+Now that the basics are all in place (playwright excepted), it's time to look at changing it using various other available tools. First up, it's replacing the use of `fetch` with `axios`.
+
+The documentation made this a fairly straightforward exercise in respect of my `dataFetch` function. Testing it, unsurprisingly, was a bit more difficult.
+
+I'd figured that I probably had to import the library in to the test file and mock it but when the suite then ran I got a `Cannot use import statement outside a module` error which baffled me since I was importing it. After triple checking that I wasn't going mad, I put it through Google and found that I had to [add the following](https://stackoverflow.com/a/74297004) to my `package.json` file:
+
+```
+  "jest": {
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
+    }
+  },
+```
+
+Supposedly I can also add it to my `jest.config.ts` and then reference it in `package.json` as `"jest": "/path/to/jest.config.ts"` but when I tried that I was told I need to run `npm eject` first. Not knowing what the command would do I looked it up first and discovered that it would break this app out of the `create-react-app` wrapping. Something for another day, I think.
+
+Import accomplished I then had to mock it. I figured this would be similar to what I have for `highcharts` so initially went with `jest.mock("axios", () => ({}));` whilst replacing `global.fetch = jest.fn().mockResolvedValue()` with `axios = jest.fn().mockResolvedValue()` but that didn't get me very far so back to [Google](https://stackoverflow.com/a/69579639):
+
+```
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+```
+
+The top line has to be at the same level of the import but the second one is quite happy within the block of tests relating to `dataFetch`.
+
+Thus `axios = jest.fn().mockResolvedValue()` become `mockedValue.get.mockResolvedValue()` but resulted in the output being undefined rather than the mocked result I was expecting.
+
+It turned out that the 'mistake' was using `axios(url)` rather than `axious.get(url)` in the `dataFetch`. Not that I could see that but Claude told me that I was being a muppet. It suggested some changes to the tests but the simpler change was to update `dataFetch`.
+
+After that all of the happy path tests fell in to place but a couple of the fail path ones needed a bit more tweaking.
