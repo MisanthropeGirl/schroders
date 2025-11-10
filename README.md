@@ -363,3 +363,11 @@ Eliminated the `act()` errors. For `StockList.test.tsx` this involved merging th
 # 2025-11-07
 
 I'd forgotten about playwright. OK, that's not quite true; I hadn't twigged it was an end to end testing library. I've therefore installed it (v1.48.2 because of the MacOS version on this MacBook and the limitations of my of node.js version) and shall proceed to read the docs. `npx playwright install` gave me problems for a bit because it wouldn't install WebKit (again, machine age related) but `npx playwright install [firefox|chromium]` got around that.
+
+## 2025-11-08
+
+I may have spoken too soon. I changed the tests in the example to be a single one which checked for 'schroders' in the page title and it still failed when I ran it. I either need an earlier version (no idea which) or to stopping fannying around and buy myself a new computer.
+
+## 2025-11-10
+
+Since the playwright setup includes GitHub actions I thought I might commit this single test, push it and see what happens. If this doesn't work then I'll uninstall playwright and come back to it at a later time.
