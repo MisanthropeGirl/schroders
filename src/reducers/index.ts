@@ -1,4 +1,5 @@
 import { AnyAction } from 'redux';
+import { produce } from 'immer';
 import { ACTION_TYPES, DATE_MAX, DATE_MIN } from "../constants";
 import { chartPriceOptions } from '../components/ChartOptions/ChartOptions';
 
@@ -10,32 +11,34 @@ const initialState: Store = {
 };
 
 const reducer = (state: Store = initialState, action: AnyAction): Store => {
-	switch (action.type) {
-		case ACTION_TYPES.SET_FROM_DATE:
-			return {
-				...state,
-				fromDate: action.payload,
-			};
-    case ACTION_TYPES.SET_TO_DATE:
-      return {
-        ...state,
-        toDate: action.payload,
-      };
-    case ACTION_TYPES.SET_CHART_PRICING_OPTION:
-      return {
-        ...state,
-        priceOption: action.payload,
-      };
-    case ACTION_TYPES.SET_SELECTED_TICKERS:
-      return {
-        ...state,
-        selectedTickers: state.selectedTickers.includes(action.payload)
-          ? state.selectedTickers.filter(it => it !== action.payload)
-          : [...state.selectedTickers, action.payload]
-      }
-    default:
-			return { ...state };
-	}
+  return produce(state, draft => {
+    switch (action.type) {
+      case ACTION_TYPES.SET_FROM_DATE:
+        draft.fromDate = action.payload;
+        break;
+      case ACTION_TYPES.SET_TO_DATE:
+        draft.toDate = action.payload;
+        break;
+      case ACTION_TYPES.SET_CHART_PRICING_OPTION:
+        draft.priceOption = action.payload;
+        break;
+      case ACTION_TYPES.SET_NEW_TICKER:
+        draft.newTicker = action.payload;
+        break;
+      case ACTION_TYPES.SET_REMOVED_TICKER:
+        draft.removedTicker = action.payload;
+        break;
+      case ACTION_TYPES.SET_SELECTED_TICKERS:
+        if (state.selectedTickers.includes(action.payload)) {
+          draft.selectedTickers = state.selectedTickers.filter(it => it !== action.payload);
+        } else {
+          draft.selectedTickers.push(action.payload);
+        }
+        break;
+      default:
+        break;
+    }
+  });
 };
 
 export type RootState = ReturnType<typeof reducer>;

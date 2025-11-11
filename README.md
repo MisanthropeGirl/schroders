@@ -435,3 +435,9 @@ It turned out that the 'mistake' was using `axios(url)` rather than `axios.get(u
 After that all of the happy path tests fell in to place but a couple of the fail path ones needed a bit more tweaking.
 
 Since `axios` will take any parameters as an object I no longer need to stringify them myself so I can remove the `convertObjectToString` function and everything associated with it.
+
+## 2025-11-11
+
+Was planning on moving on to modern redux today but whilst I was reading through I saw that it makes use of Immer (which Richard W had us introduce, not entirely successfully, in the latter years of F1000) so thought I'd implement that first.
+
+This is not the most complicated of projects so using it is probably overkill but *id est quod id est* and all seems to have gone well with using it in the reducer and none of the tests need changing so that's good.
