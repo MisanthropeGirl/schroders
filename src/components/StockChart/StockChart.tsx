@@ -30,11 +30,9 @@ function StockChart() {
           sort: 'asc',
         }
       );
-        
+
       // remove existing data for the ticker
-      const temp = data.findIndex(d => d.ticker === ticker) > -1
-        ? data.filter(d => d.ticker !== ticker)
-        : data;
+      const temp = data.filter(it => it.ticker !== ticker);
       setData([...temp, { ticker, data: stockData.results }]);
       setError(false);
     }
@@ -67,9 +65,9 @@ function StockChart() {
 
   useEffect(() => {
     if (removedTicker && removedTicker !== '') {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    setData(d => d.filter(it => it.ticker !== removedTicker));
+      setData(data => data.filter(it => it.ticker !== removedTicker));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [removedTicker]);
 
   useEffect(() => {
