@@ -5,20 +5,19 @@ import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
 import './StockChart.css';
 import { useSelector } from "react-redux";
-import { selectFromDate, selectNewTicker, selectPriceOption, selectRemovedTicker, selectSelectedTickers, selectToDate } from "../../selectors";
+import { selectFromDate, selectPriceOption, selectSelectedTickers, selectToDate } from "../../selectors";
 
 function StockChart() {
   const [data, setData] = useState<RawChartData[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
-
-  const newTicker = useSelector(selectNewTicker);
-  const removedTicker = useSelector(selectRemovedTicker);
+  
   const selectedTickers = useSelector(selectSelectedTickers);
   const fromDate = useSelector(selectFromDate);
   const toDate = useSelector(selectToDate);
   const priceOption = useSelector(selectPriceOption);
-
+  
+  const isInitialMount = useRef(true);
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
   const loadData = async (ticker: string, from: string = fromDate, to: string = toDate) => {
@@ -50,31 +49,44 @@ function StockChart() {
   }
 
   useEffect(() => {
-    if (newTicker && newTicker !== '') {
-      loadData(newTicker);
+    if (selectedTickers.length === 0) {
+      setLoading(true);
+      return;
+    }
+
+    // loop through selected tickers and if there isn't a corresponding entry in
+    // data then fetch data for that ticker
+    selectedTickers.forEach(ticker => {
+      if (data.findIndex(d => d.ticker === ticker) === -1) {
+        loadData(ticker);
+      }
+    });
+
+    // loop over data and see if there is a match in selectedTickers
+    // remove the entry if there isn't
+    let removedTicker = '';
+    data.forEach(it => {
+      if (!selectedTickers.includes(it.ticker)) {
+        removedTicker = it.ticker;
+      }
+    });
+    if (removedTicker !== '') {
+      setData(data => data.filter(d => d.ticker !== removedTicker));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [newTicker]);
+  }, [selectedTickers]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     if (selectedTickers.length > 0) {
       selectedTickers.forEach(ticker => loadData(ticker, fromDate, toDate));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDate, toDate]);
-
-  useEffect(() => {
-    if (removedTicker && removedTicker !== '') {
-      setData(data => data.filter(it => it.ticker !== removedTicker));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [removedTicker]);
-
-  useEffect(() => {
-    if (data.length === 0) {
-      setLoading(true);
-    }
-  }, [data])
 
   if (loading) {
     return (

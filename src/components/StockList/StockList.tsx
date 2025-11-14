@@ -4,7 +4,7 @@ import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui
 import { POLYGON_LIST_URL } from '../../constants';
 import { selectSelectedTickers } from '../../selectors';
 import { dataFetch } from '../../utilities';
-import { setNewTicker, setRemovedTicker, setSelectedTickers } from '../../actions';
+import { setSelectedTickers } from '../../actions';
 
 function StockList() {
   const [data, setData] = useState<Stock[]>([]);
@@ -54,13 +54,9 @@ function StockList() {
 
     if (e.target.checked) {
       if (selectedTickers.length < 3) {
-        dispatch(setNewTicker(ticker));
-        dispatch(setRemovedTicker(''));
         dispatch(setSelectedTickers(ticker));
       }
     } else {
-      dispatch(setNewTicker(''));
-      dispatch(setRemovedTicker(ticker));
       dispatch(setSelectedTickers(ticker));
     }
   };

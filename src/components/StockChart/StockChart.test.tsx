@@ -1,6 +1,6 @@
 import StockChart from './StockChart';
 import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
-import { setChartPricingOption, setFromDate, setNewTicker, setRemovedTicker } from '../../actions';
+import { setChartPricingOption, setFromDate, setSelectedTickers } from '../../actions';
 import { DATE_MIDDLE } from '../../constants';
 import { A, A_DATE_RANGE, AA, AAM } from '../../mocks/Stocks';
 import * as utilities from '../../utilities';
@@ -77,7 +77,7 @@ describe('StockChart', () => {
   });
 
   test('it should display chart when there are multiple tickers', async () => {
-    const { store } = render(<StockChart />, {
+    render(<StockChart />, {
       preloadedState: {
         selectedTickers: ['A', 'AA', 'AAM']
       }
@@ -93,7 +93,7 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    act(() => store.dispatch(setNewTicker('A')));
+    act(() => store.dispatch(setSelectedTickers('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('StockChart', () => {
       expect(chart).toBeInTheDocument();
     });
 
-    act(() => store.dispatch(setRemovedTicker('A')));
+    act(() => store.dispatch(setSelectedTickers('A')));
 
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
@@ -125,12 +125,12 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    act(() => store.dispatch(setNewTicker('A')));
+    act(() => store.dispatch(setSelectedTickers('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
 
-    act(() => store.dispatch(setRemovedTicker('A')));
+    act(() => store.dispatch(setSelectedTickers('A')));
 
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe('StockChart', () => {
     // Should have been called once initially
     expect(dataFetchSpy).toHaveBeenCalledTimes(1);
 
-    act(() => store.dispatch(setNewTicker('AA')));
+    act(() => store.dispatch(setSelectedTickers('AA')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));
@@ -165,7 +165,7 @@ describe('StockChart', () => {
       expect.any(Object)
     );
 
-    act(() => store.dispatch(setNewTicker('AAM')));
+    act(() => store.dispatch(setSelectedTickers('AAM')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(3));
@@ -180,31 +180,29 @@ describe('StockChart', () => {
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
   });
 
-  test('it should ignore empty newTicker string', async () => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch');
-
-    const { store } = render(<StockChart />);
-
-    act(() => store.dispatch(setNewTicker('')));
-
-    expect(dataFetchSpy).not.toHaveBeenCalled();
-  });
-
-  test('it should ignore empty removedTicker string', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockResolvedValue({ results: A });
+  test('it should update the chart when tickers are removed', async () => {
+    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
+      .mockResolvedValueOnce({ results: A })
+      .mockResolvedValueOnce({ results: AA })
+      .mockResolvedValueOnce({ results: AAM });
 
     const { store } = render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        selectedTickers: ['A', 'AA', 'AAM']
       }
     });
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
-    act(() => store.dispatch(setRemovedTicker('')));
+    // remove a ticker
+    act(() => store.dispatch(setSelectedTickers('AAM')));
+    expect(store.getState().selectedTickers).toHaveLength(2);
+    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
-    // Chart should still be visible (data not removed)
+    // and a second
+    act(() => store.dispatch(setSelectedTickers('AA')));
+    expect(store.getState().selectedTickers).toHaveLength(1);
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
   });
 
@@ -256,4 +254,23 @@ describe('StockChart', () => {
       expect.any(Object)
     );
   });
+
+  test('it should do nothing when date range changes if there are no tickers', async () => {
+    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch').mockResolvedValueOnce({ results: A })
+
+    const { store } = render(<StockChart />);
+
+    // Should not be called as there are no tickers
+    expect(dataFetchSpy).toHaveBeenCalledTimes(0);
+
+    act(() => store.dispatch(setFromDate(DATE_MIDDLE)));
+
+    // Still shouldn't be called
+    await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(0));
+
+    // Verify that the chart isn't visible
+    expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
+    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+  });
+
 });

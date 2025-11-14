@@ -24,22 +24,6 @@ export const setChartPricingOption = (payload: ChartPriceOptions): { type: strin
 	};
 };
 
-export const setNewTicker = (payload: string): { type: string; payload: string } => {
-	console.info(`Dispatching ${ACTION_TYPES.SET_NEW_TICKER}`);
-	return {
-		type: ACTION_TYPES.SET_NEW_TICKER,
-		payload,
-	};
-};
-
-export const setRemovedTicker = (payload: string): { type: string; payload: string } => {
-	console.info(`Dispatching ${ACTION_TYPES.SET_REMOVED_TICKER}`);
-	return {
-		type: ACTION_TYPES.SET_REMOVED_TICKER,
-		payload,
-	};
-};
-
 export const setSelectedTickers = (payload: string): { type: string; payload: string } => {
 	console.info(`Dispatching ${ACTION_TYPES.SET_SELECTED_TICKERS}`);
 	return {

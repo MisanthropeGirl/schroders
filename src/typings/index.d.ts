@@ -74,7 +74,5 @@ interface Store {
   fromDate: string;
   toDate: string;
   priceOption: ChartPriceOptions;
-  newTicker?: string;
-  removedTicker?: string;
   selectedTickers: string[];
 }

@@ -26,16 +26,6 @@ const reducer = (state: Store = initialState, action: AnyAction): Store => {
         ...state,
         priceOption: action.payload,
       };
-    case ACTION_TYPES.SET_NEW_TICKER: 
-      return {
-        ...state,
-        newTicker: action.payload,
-      }
-    case ACTION_TYPES.SET_REMOVED_TICKER: 
-      return {
-        ...state,
-        removedTicker: action.payload,
-      }
     case ACTION_TYPES.SET_SELECTED_TICKERS:
       return {
         ...state,

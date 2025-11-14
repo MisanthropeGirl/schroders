@@ -30,24 +30,6 @@ describe('Action testing',  () => {
     })
   })
 
-  test('setNewTicker', () => {
-    const newTicker = 'SDR';
-    const newTickerAction = actions.setNewTicker(newTicker);
-    expect(newTickerAction).toEqual({
-      type: ACTION_TYPES.SET_NEW_TICKER,
-		  payload: newTicker,
-    })
-  })
-
-  test('setRemovedTicker', () => {
-    const removedTicker = 'SDR';
-    const removedTickerAction = actions.setRemovedTicker(removedTicker);
-    expect(removedTickerAction).toEqual({
-      type: ACTION_TYPES.SET_REMOVED_TICKER,
-		  payload: removedTicker,
-    })
-  })
-
   test('setSelectedTickers', () => {
     const selectedTickers = 'SDR';
     const selectedTickersAction = actions.setSelectedTickers(selectedTickers);

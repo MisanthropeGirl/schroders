@@ -373,3 +373,11 @@ I may have spoken too soon. I changed the tests in the example to be a single on
 Since the playwright setup includes GitHub actions I thought I might commit this single test, push it and see what happens. If this doesn't work then I'll uninstall playwright and come back to it at a later time.
 
 Update: It didn't work. The GitHub action complained about redux and its dependencies. Another push to get me to buy a new machine!
+
+## 2025-11-14
+
+I was supposed to be seeing about switching out the redux approach I've been using for the newer way of doing it via ReduxToolkit but I finally figured out how to eliminate `newTicker` and `removeTicker`. I didn't like that I had three pieces of state to manage the tickers when only one should have been necessary but couldn't see how to do it.
+
+My changes resulted a flaw which only become evident when I ran the test suite, viz two of the `useEffect`'s were fired when `selectedTickers` was pre-populated. Not that I could see what the reason was but Claude could and it proposed the adopted solution.
+
+I can also, as a result of this refactoring, eliminate the final useEffect and move that logic in to first one.

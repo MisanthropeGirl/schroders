@@ -49,32 +49,6 @@ describe('Reducer testing', () => {
     });
   });
 
-  test('it will update new ticker', () => {
-    const newTicker = 'SDR';
-    const action = {
-      type: ACTION_TYPES.SET_NEW_TICKER,
-		  payload: newTicker,
-    };
-
-    expect(reducer(initialTestState, action)).toEqual({
-      ...initialTestState,
-      newTicker,
-    });
-  });
-
-  test('it will update removed ticker', () => {
-    const removedTicker = 'SDR';
-    const action = {
-      type: ACTION_TYPES.SET_REMOVED_TICKER,
-		  payload: removedTicker,
-    };
-
-    expect(reducer(initialTestState, action)).toEqual({
-      ...initialTestState,
-      removedTicker,
-    });
-  });
-
   test('it will add a ticker to selected tickers', () => {
     const ticker = 'SDR';
     const action = {
