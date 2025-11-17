@@ -1,9 +1,10 @@
 import StockChart from './StockChart';
+import { datesUpdated, priceOptionUpdated } from 'components/ChartOptions/chartOptionsSlice';
+import { selectedTickersUpdated } from 'components/StockList/stockListSlice';
 import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
-import { setChartPricingOption, setFromDate, setSelectedTickers } from '../../actions';
-import { DATE_MIDDLE } from '../../constants';
-import { A, A_DATE_RANGE, AA, AAM } from '../../mocks/Stocks';
+import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from '../../constants';
 import * as utilities from '../../utilities';
+import { A, A_DATE_RANGE, AA, AAM } from '../../mocks/Stocks';
 
 // Mock Highcharts
 jest.mock("highcharts", () => ({}));
@@ -36,7 +37,9 @@ describe('StockChart', () => {
 
     render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        stocks: {
+          selectedTickers: ['A']
+        }
       }
     });
 
@@ -51,7 +54,9 @@ describe('StockChart', () => {
 
     render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        stocks: {
+          selectedTickers: ['A']
+        }
       }
     });
 
@@ -64,7 +69,9 @@ describe('StockChart', () => {
   test('it should display a chart when there is a ticker', async () => {
     render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        stocks: {
+          selectedTickers: ['A']
+        }
       }
     });
 
@@ -79,7 +86,9 @@ describe('StockChart', () => {
   test('it should display chart when there are multiple tickers', async () => {
     render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A', 'AA', 'AAM']
+        stocks: {
+          selectedTickers: ['A', 'AA', 'AAM']
+        }
       }
     });
 
@@ -93,7 +102,7 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    act(() => store.dispatch(setSelectedTickers('A')));
+    act(() => store.dispatch(selectedTickersUpdated('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
@@ -102,7 +111,9 @@ describe('StockChart', () => {
   test('it should remove the chart when the ticker array is empty', async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        stocks: {
+          selectedTickers: ['A']
+        }
       }
     });
 
@@ -113,7 +124,7 @@ describe('StockChart', () => {
       expect(chart).toBeInTheDocument();
     });
 
-    act(() => store.dispatch(setSelectedTickers('A')));
+    act(() => store.dispatch(selectedTickersUpdated('A')));
 
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
@@ -125,12 +136,12 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    act(() => store.dispatch(setSelectedTickers('A')));
+    act(() => store.dispatch(selectedTickersUpdated('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
 
-    act(() => store.dispatch(setSelectedTickers('A')));
+    act(() => store.dispatch(selectedTickersUpdated('A')));
 
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
@@ -144,7 +155,9 @@ describe('StockChart', () => {
 
     const { store } = render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        stocks: {
+          selectedTickers: ['A']
+        }
       }
     });
 
@@ -154,7 +167,7 @@ describe('StockChart', () => {
     // Should have been called once initially
     expect(dataFetchSpy).toHaveBeenCalledTimes(1);
 
-    act(() => store.dispatch(setSelectedTickers('AA')));
+    act(() => store.dispatch(selectedTickersUpdated('AA')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));
@@ -165,7 +178,7 @@ describe('StockChart', () => {
       expect.any(Object)
     );
 
-    act(() => store.dispatch(setSelectedTickers('AAM')));
+    act(() => store.dispatch(selectedTickersUpdated('AAM')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(3));
@@ -188,7 +201,9 @@ describe('StockChart', () => {
 
     const { store } = render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A', 'AA', 'AAM']
+        stocks: {
+          selectedTickers: ['A', 'AA', 'AAM']
+        }
       }
     });
 
@@ -196,20 +211,22 @@ describe('StockChart', () => {
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
     // remove a ticker
-    act(() => store.dispatch(setSelectedTickers('AAM')));
-    expect(store.getState().selectedTickers).toHaveLength(2);
+    act(() => store.dispatch(selectedTickersUpdated('AAM')));
+    expect(store.getState().stocks.selectedTickers).toHaveLength(2);
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
     // and a second
-    act(() => store.dispatch(setSelectedTickers('AA')));
-    expect(store.getState().selectedTickers).toHaveLength(1);
+    act(() => store.dispatch(selectedTickersUpdated('AA')));
+    expect(store.getState().stocks.selectedTickers).toHaveLength(1);
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
   });
 
   test('it should update chart when price option changes', async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        stocks: {
+          selectedTickers: ['A']
+        }
       }
     });
 
@@ -220,7 +237,7 @@ describe('StockChart', () => {
       expect(chart).toBeInTheDocument();
     });
 
-    act(() => store.dispatch(setChartPricingOption('High')));
+    act(() => store.dispatch(priceOptionUpdated('High')));
 
     // Chart should still be visible
     // Tried to test for the change to the chart title but the chart isn't being rendered
@@ -234,7 +251,9 @@ describe('StockChart', () => {
 
     const { store } = render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A']
+        stocks: {
+          selectedTickers: ['A']
+        }
       }
     });
 
@@ -243,7 +262,7 @@ describe('StockChart', () => {
     // Should have been called once initially
     expect(dataFetchSpy).toHaveBeenCalledTimes(1);
 
-    act(() => store.dispatch(setFromDate(DATE_MIDDLE)));
+    act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
 
     // Should call dataFetch again for the new date range
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));
@@ -298,7 +317,7 @@ describe('StockChart', () => {
     // Should not be called as there are no tickers
     expect(dataFetchSpy).toHaveBeenCalledTimes(0);
 
-    act(() => store.dispatch(setFromDate(DATE_MIDDLE)));
+    act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIDDLE, toDate: DATE_MAX })));
 
     // Still shouldn't be called
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(0));

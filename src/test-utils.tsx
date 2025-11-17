@@ -1,11 +1,11 @@
 import React, { ReactElement } from 'react'
-import { render, RenderOptions } from '@testing-library/react'
-import { createStore } from 'redux';
 import { Provider } from 'react-redux';
-import reducer from './reducers';
+import { configureStore } from '@reduxjs/toolkit';
+import { render, RenderOptions } from '@testing-library/react'
+import { rootReducer, RootState } from 'store';
 
 interface CustomRenderResult extends ReturnType<typeof render> {
-  store: ReturnType<typeof createStore>;
+  store: ReturnType<typeof configureStore>;
 }
 
 const customRender = (
@@ -13,17 +13,20 @@ const customRender = (
   {
     preloadedState,
     ...options
-  }: Omit<RenderOptions, 'wrapper'> & { preloadedState?: Partial<Store> } = {}
+  }: Omit<RenderOptions, 'wrapper'> & { preloadedState?: Partial<RootState> } = {}
 ) => {
   // Get the initial state from your reducer
-  const initialState = reducer(undefined, { type: '@@INIT' });
+  const initialState = rootReducer(undefined, { type: '@@INIT' });
 
   // Merge preloaded state with initial state
   const mergedState = preloadedState
     ? { ...initialState, ...preloadedState }
     : initialState;
 
-  const testStore = createStore(reducer, mergedState);
+  const testStore = configureStore({
+    reducer: rootReducer,
+    preloadedState: mergedState
+  });
 
   const ReduxProvider = ({ children }: { children: React.ReactNode }) => {
     return <Provider store={testStore}>{children}</Provider>

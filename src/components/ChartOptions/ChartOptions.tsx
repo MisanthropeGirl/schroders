@@ -2,10 +2,8 @@ import { ChangeEvent, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, RadioInputSlotPropsOverrides, TextField } from '@mui/material';
 import { datesUpdated, priceOptionUpdated } from './chartOptionsSlice';
-import { DATE_MAX, DATE_MIN } from '../../constants';
+import { DATE_MAX, DATE_MIN, chartPriceOptions } from '../../constants';
 import './ChartOptions.css';
-
-export const chartPriceOptions = ['Close', 'High', 'Low', 'Open'] as const;
 
 interface MyRadioInputSlotPropsOverrides extends RadioInputSlotPropsOverrides {
   'data-testid'?: string;

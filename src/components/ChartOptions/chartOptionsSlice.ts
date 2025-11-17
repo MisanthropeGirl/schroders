@@ -1,9 +1,8 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { DATE_MIN, DATE_MAX } from "../../constants";
-import { chartPriceOptions } from "./ChartOptions";
+import { DATE_MIN, DATE_MAX, chartPriceOptions } from "../../constants";
 
 const initialState: ChartOptions = {
-  priceOption: chartPriceOptions[0],
+  priceOption: chartPriceOptions[0] as ChartPriceOptions,
   fromDate: DATE_MIN,
   toDate: DATE_MAX,
 };

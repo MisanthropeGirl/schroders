@@ -10,7 +10,7 @@ const stockListSlice = createSlice({
   reducers: {
     selectedTickersUpdated: (state, action: PayloadAction<string>) => {
       if (state.selectedTickers.includes(action.payload)) {
-        state.selectedTickers.filter(it => it !== action.payload)
+        state.selectedTickers = state.selectedTickers.filter(it => it !== action.payload)
       } else {
         state.selectedTickers.push(action.payload);
       }

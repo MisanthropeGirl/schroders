@@ -1,12 +1,14 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import chartOptionsReducer from './components/ChartOptions/chartOptionsSlice';
 import stockListReducer from './components/StockList/stockListSlice';
 
+export const rootReducer = combineReducers({
+  options: chartOptionsReducer,
+  stocks: stockListReducer
+})
+
 export const store = configureStore({
-  reducer: {
-    options: chartOptionsReducer,
-    stocks: stockListReducer
-  }
+  reducer: rootReducer
 });
 
 // Infer the type of `store`

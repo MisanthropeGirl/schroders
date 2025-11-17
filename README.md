@@ -398,3 +398,9 @@ await act(async () => {
 ```
 
 which also worked so I'll go with that instead.
+
+## 2025-11-17
+
+*Dates are out of order as everything from this point onwards is the branch rather than the base*
+
+Switched over to modern Redux today, aka ReactToolkit. I read the first four pages of the Redux Essentials tutorial last week and I was pleasantly suprised at how easy it was to migrate from old style to new. Obviously the tests exploded but they were easy enough to update. I grimaced a bit when I realised that I'd have to change `test-utils.tsx` but the necessary adjustments were simple.

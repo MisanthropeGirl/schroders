@@ -1,8 +1,8 @@
 import userEvent from '@testing-library/user-event';
 import StockList from './StockList';
 import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
-import { stockList } from '../../mocks/StockList';
 import * as utilities from '../../utilities';
+import { stockList } from '../../mocks/StockList';
 
 describe('StockList', () => {
   beforeEach(() => {
@@ -109,10 +109,10 @@ describe('StockList', () => {
 
     // Check then uncheck
     await user.click(checkboxes[0]);
-    expect(store.getState().selectedTickers).toContain(stockList[0].ticker);
+    expect(store.getState().stocks.selectedTickers).toContain(stockList[0].ticker);
 
     await user.click(checkboxes[0]);
-    expect(store.getState().selectedTickers).not.toContain(stockList[0].ticker);
+    expect(store.getState().stocks.selectedTickers).not.toContain(stockList[0].ticker);
   });
 
   test('checkboxes have accessible labels', async () => {
@@ -129,7 +129,9 @@ describe('StockList', () => {
     const user = userEvent.setup();
     const { store } = render(<StockList />, {
       preloadedState: {
-        selectedTickers: ['A', 'AA', 'AAM']
+        stocks: {
+          selectedTickers: ['A', 'AA', 'AAM']
+        }
       }
     });
 
@@ -138,7 +140,7 @@ describe('StockList', () => {
     const table: HTMLTableElement = screen.getByTestId('stocklist');
     const checkboxes = table.getElementsByTagName('input');
 
-    expect(store.getState().selectedTickers).toHaveLength(3);
+    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
     expect(checkboxes[3]).toBeDisabled();
 
     // Try to click it anyway (userEvent will allow this)
@@ -149,13 +151,15 @@ describe('StockList', () => {
       // userEvent might throw for disabled elements
     }
 
-    expect(store.getState().selectedTickers).toHaveLength(3);
+    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
   });
 
   test('it defensively ignores attempts to add a fourth ticker even if UI is bypassed', async () => {
     const { store } = render(<StockList />, {
       preloadedState: {
-        selectedTickers: ['A', 'AA', 'AAM']
+        stocks: {
+          selectedTickers: ['A', 'AA', 'AAM']
+        }
       }
     });
 
@@ -164,7 +168,7 @@ describe('StockList', () => {
     const table: HTMLTableElement = screen.getByTestId('stocklist');
     const checkboxes = table.getElementsByTagName('input');
 
-    expect(store.getState().selectedTickers).toHaveLength(3);
+    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
 
     // Now simulate a malicious/buggy scenario: manually enable and check the 4th checkbox
     const fourthCheckbox = checkboxes[3] as HTMLInputElement;
@@ -172,8 +176,8 @@ describe('StockList', () => {
     fireEvent.click(fourthCheckbox);
 
     // The defensive logic should prevent the 4th ticker from being added
-    expect(store.getState().selectedTickers).toHaveLength(3);
-    expect(store.getState().selectedTickers).not.toContain(stockList[3].ticker);
+    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
+    expect(store.getState().stocks.selectedTickers).not.toContain(stockList[3].ticker);
   });
 
   test('it should display an error message when data fetch fails with Error', async () => {

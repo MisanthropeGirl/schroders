@@ -1,9 +1,9 @@
 import { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
-import { addDays, addYears, format, subDays } from 'date-fns';
+import { addDays, format, subDays } from 'date-fns';
 import ChartOptions from './ChartOptions';
-import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from '../../constants';
 import { render, screen } from '../../test-utils';
+import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from '../../constants';
 
 const DATE_MIDDLE_PLUS_ONE_DAY = format(addDays(DATE_MIDDLE, 1), 'yyyy-MM-dd');
 const DATE_MIDDLE_MINUS_ONE_DAY = format(subDays(DATE_MIDDLE, 1), 'yyyy-MM-dd');
@@ -185,7 +185,7 @@ describe('ChartOptions', () => {
     await user.clear(fromDate);
     await user.type(fromDate, DATE_MIDDLE);
   
-    expect(store.getState().fromDate).toBe(DATE_MIDDLE);
+    expect(store.getState().options.fromDate).toBe(DATE_MIDDLE);
     expect(screen.queryByText('The from date should be before the to date')).not.toBeInTheDocument();
   });
   
@@ -197,7 +197,7 @@ describe('ChartOptions', () => {
     await user.clear(toDate);
     await user.type(toDate, DATE_MIDDLE);
   
-    expect(store.getState().toDate).toBe(DATE_MIDDLE);
+    expect(store.getState().options.toDate).toBe(DATE_MIDDLE);
     expect(screen.queryByText('The to date should be after the from date')).not.toBeInTheDocument();
   });
 
@@ -208,14 +208,14 @@ describe('ChartOptions', () => {
     const toDate = screen.getByTestId('to-date');
   
     // Initial state
-    expect(store.getState().fromDate).toBe(DATE_MIN);
-    expect(store.getState().toDate).toBe(DATE_MAX);
+    expect(store.getState().options.fromDate).toBe(DATE_MIN);
+    expect(store.getState().options.toDate).toBe(DATE_MAX);
   
     // Step 1: Change toDate to middle (valid)
     await user.clear(toDate);
     await user.type(toDate, DATE_MIDDLE);
   
-    expect(store.getState().toDate).toBe(DATE_MIDDLE);
+    expect(store.getState().options.toDate).toBe(DATE_MIDDLE);
   
     // Step 2: Change fromDate to after toDate (invalid - should NOT dispatch)
     await user.clear(fromDate);
@@ -223,15 +223,15 @@ describe('ChartOptions', () => {
   
     expect(screen.getByText('The from date should be before the to date')).toBeInTheDocument();
     // Redux should still have old fromDate
-    expect(store.getState().fromDate).toBe(DATE_MIN);
+    expect(store.getState().options.fromDate).toBe(DATE_MIN);
   
     // Step 3: Fix toDate to be after the new fromDate (valid again)
     await user.clear(toDate);
     await user.type(toDate, DATE_MAX);
   
     // Now BOTH dates should be in Redux
-    expect(store.getState().fromDate).toBe(DATE_MIDDLE_PLUS_ONE_DAY);
-    expect(store.getState().toDate).toBe(DATE_MAX);
+    expect(store.getState().options.fromDate).toBe(DATE_MIDDLE_PLUS_ONE_DAY);
+    expect(store.getState().options.toDate).toBe(DATE_MAX);
     expect(screen.queryByText('The from date should be before the to date')).not.toBeInTheDocument();
   });
 
@@ -248,6 +248,6 @@ describe('ChartOptions', () => {
 
     expect(radioOpen).toBeChecked();
     expect(radioClose).not.toBeChecked();
-    expect(store.getState().priceOption).toBe('Open');
+    expect(store.getState().options.priceOption).toBe('Open');
   });
 });
