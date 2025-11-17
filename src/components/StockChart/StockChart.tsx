@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useImmer } from "use-immer";
-import { dataFetch, dataTransform } from '../../utilities';
-import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
+import { useSelector } from "react-redux";
 import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
+import { selectFromDate, selectPriceOption, selectToDate } from "../ChartOptions/chartOptionsSlice";
+import { selectSelectedTickers } from "../StockList/stockListSlice";
+import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
+import { dataFetch, dataTransform } from '../../utilities';
 import './StockChart.css';
-import { useSelector } from "react-redux";
-import { selectFromDate, selectPriceOption, selectSelectedTickers, selectToDate } from "../../selectors";
 
 function StockChart() {
   const [data, setData] = useImmer<RawChartData[]>([]);

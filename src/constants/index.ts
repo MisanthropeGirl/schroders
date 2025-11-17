@@ -12,13 +12,6 @@ export const PRICE_SERIES_CODES = {
   TIME: 't',
 };
 
-export const ACTION_TYPES = {
-  SET_FROM_DATE: 'SET_FROM_DATE',
-  SET_TO_DATE: 'SET_TO_DATE',
-  SET_CHART_PRICING_OPTION: 'SET_CHART_PRICING_OPTION',
-  SET_SELECTED_TICKERS: 'SET_SELECTED_TICKERS',
-};
-
 // only have access to the last two years
 export const DATE_MAX = format(new Date(), 'yyyy-MM-dd');
 export const DATE_MIDDLE = format(subYears(DATE_MAX, 1), 'yyyy-MM-dd');

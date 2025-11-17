@@ -1,17 +1,17 @@
-import { createStore, StoreEnhancer } from 'redux';
-import reducer from './reducers';
+import { configureStore } from '@reduxjs/toolkit';
+import chartOptionsReducer from './components/ChartOptions/chartOptionsSlice';
+import stockListReducer from './components/StockList/stockListSlice';
 
-type WindowWithDevTools = Window & {
-  __REDUX_DEVTOOLS_EXTENSION__: () => StoreEnhancer<unknown, {}>
-}
+export const store = configureStore({
+  reducer: {
+    options: chartOptionsReducer,
+    stocks: stockListReducer
+  }
+});
 
-const isReduxDevtoolsExtenstionExist = (arg: Window | WindowWithDevTools):  arg is WindowWithDevTools  => {
-  return  '__REDUX_DEVTOOLS_EXTENSION__' in arg;
-}
-
-const store = createStore(
-  reducer,
-  isReduxDevtoolsExtenstionExist(window) ? window.__REDUX_DEVTOOLS_EXTENSION__() : undefined
-);
-
-export { store };
+// Infer the type of `store`
+export type AppStore = typeof store;
+// Infer the `AppDispatch` type from the store itself
+// export type AppDispatch = typeof store.dispatch;
+// Same for the `RootState` type
+export type RootState = ReturnType<typeof store.getState>;

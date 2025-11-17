@@ -1,10 +1,9 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
+import { selectedTickersUpdated, selectSelectedTickers } from './stockListSlice';
 import { POLYGON_LIST_URL } from '../../constants';
-import { selectSelectedTickers } from '../../selectors';
 import { dataFetch } from '../../utilities';
-import { setSelectedTickers } from '../../actions';
 
 function StockList() {
   const [data, setData] = useState<Stock[]>([]);
@@ -54,10 +53,10 @@ function StockList() {
 
     if (e.target.checked) {
       if (selectedTickers.length < 3) {
-        dispatch(setSelectedTickers(ticker));
+        dispatch(selectedTickersUpdated(ticker));
       }
     } else {
-      dispatch(setSelectedTickers(ticker));
+      dispatch(selectedTickersUpdated(ticker));
     }
   };
 

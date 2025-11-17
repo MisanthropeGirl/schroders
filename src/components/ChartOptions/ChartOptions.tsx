@@ -1,7 +1,7 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, RadioInputSlotPropsOverrides, TextField } from '@mui/material';
-import { setFromDate, setToDate, setChartPricingOption } from '../../actions';
+import { datesUpdated, priceOptionUpdated } from './chartOptionsSlice';
 import { DATE_MAX, DATE_MIN } from '../../constants';
 import './ChartOptions.css';
 
@@ -18,7 +18,7 @@ function ChartOptions() {
   const dispatch = useDispatch();
 
   const handlePriceOptionChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    dispatch(setChartPricingOption(e.target.value as ChartPriceOptions));
+    dispatch(priceOptionUpdated(e.target.value as ChartPriceOptions));
   };
 
   const handleDateChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -37,8 +37,7 @@ function ChartOptions() {
       // dispatching both here because if the user changed one date resulting in failed validation and
       // then changed the other date resulting in failing passing then both will need to be dispatched
       setDateError(false);
-      dispatch(setFromDate(fromDate));
-      dispatch(setToDate(toDate));
+      dispatch(datesUpdated({fromDate, toDate}));
     }
   }
 

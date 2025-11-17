@@ -1,12 +1,13 @@
 {
   "name": "schroders",
-  "version": "0.2.15",
+  "version": "0.5.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
+    "@reduxjs/toolkit": "^2.10.1",
     "date-fns": "^4.1.0",
     "highcharts": "^12.4.0",
     "highcharts-react-official": "^3.2.2",
@@ -14,7 +15,7 @@
     "react-dom": "^19.1.1",
     "react-redux": "^9.2.0",
     "react-scripts": "5.0.1",
-    "redux": "^4.0.5",
+    "redux": "^5.0.1",
     "use-immer": "^0.11.0",
     "web-vitals": "^2.1.4"
   },

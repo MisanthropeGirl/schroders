@@ -70,9 +70,12 @@ interface SearchParams {
 
 type ChartPriceOptions = typeof chartPriceOptions[number];
 
-interface Store {
+interface ChartOptions {
   fromDate: string;
   toDate: string;
   priceOption: ChartPriceOptions;
+}
+
+interface StockList {
   selectedTickers: string[];
 }
