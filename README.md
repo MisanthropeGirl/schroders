@@ -75,10 +75,10 @@ describe("Application root", () => {
 ```
 
 Key Changes:
-1. Import from react-dom/client instead of react-dom
-2. Mock createRoot instead of render
-3. createRoot returns an object with render and unmount methods
-4. Update the expectation to check that createRoot was called with the div
+1. Import from `react-dom/client` instead of `react-dom`
+2. Mock `createRoot` instead of `render`
+3. `createRoot` returns an object with `render` and unmount methods
+4. Update the expectation to check that `createRoot` was called with the div
 
 And that cured problem number 1.
 
@@ -88,7 +88,7 @@ This was a sticking point for a bit because I only gave Claude the error and not
 
 Cue several hours of chasing our tails trying to modify parts of the setup - creating `jest.config.js` and `jest.setup.ts`, installing jsdom v22 - to see if that solved the problem before I came to my senses and gave Claude the full stack trace.
 
-The problem, as is obvious once you know, is that `require("./index.tsx")` loads all the components including StockChart.tsx, which imports Highcharts, and Highcharts needs `CSS.supports()` to be available at module load time - which is before Jest setup runs.
+The problem, as is obvious once you know, is that `require("./index.tsx")` loads all the components including `StockChart.tsx`, which imports Highcharts, and Highcharts needs `CSS.supports()` to be available at module load time - which is before Jest setup runs.
 
 The suggested solution therefore was to mock Highcharts since I don't actually need it to test the file.
 
@@ -188,10 +188,10 @@ describe("Application root", () => {
 ```
 
 Key changes:
-1. Removed the import of createRoot at the top since you're mocking it
-2. Created mockRender and mockCreateRoot before the mock so you can reference them in your assertions
+1. Removed the import of `createRoot` at the top since you're mocking it
+2. Created `mockRender` and `mockCreateRoot` before the mock so you can reference them in your assertions
 3. Clear mocks before the test to ensure clean state
-4. Check that mockRender was called instead of checking the arguments to createRoot
+4. Check that `mockRender` was called instead of checking the arguments to `createRoot`
 
 However I still had the same error so back to the drawing board.
 
@@ -300,7 +300,7 @@ Claude also suggested some refactoring to reduce code repetition in the tests fo
 
 Added some error checking for the dates. Although min and max values have been set the MUI TextField allows users to breach these. Have I missed something in configuration or should I have used a lower level component, i.e. Input, rather than the wrapper?
 
-Added basic 'does it render without crashing tests' for each component and started on testing `ChartOptions`. Have tested the rendering and initialisation of the fields but can't figure out how to test the change event handlers (aside from the error conditions in the date one - albeit that testing to date is before from date is throwing an error despite my copying the code from the reverse test).
+Added basic 'does it render without crashing tests' for each component and started on testing `ChartOptions.tsx`. Have tested the rendering and initialisation of the fields but can't figure out how to test the change event handlers (aside from the error conditions in the date one - albeit that testing to date is before from date is throwing an error despite my copying the code from the reverse test).
 
 ## 2025-10-28
 
@@ -312,7 +312,7 @@ Started out using `fireEvent` to simulate the user interactions but was pointed 
 
 Wrote the tests for `App.tsx` and `StockList.tsx` today. For the former just checking that it renders was enough for full coverage and that worked fine once I'd mocked Highcharts.
 
-All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an elemnt to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [Mock Functions](https://jestjs.io/docs/mock-functions]) part of the Jest documentation but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
+All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an element to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [Mock Functions](https://jestjs.io/docs/mock-functions]) part of the Jest documentation but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
 
 The only line which I have been unable to test fully is line 56 as I can't fake the component in to having enabled checkboxes when the selectedTickers has three items. I did though try and the mock store was updated to include the ability to accept an initial state as a parameter. I could simply delete the offending if statement but it feels like a necessary piece of error checking just in case someone manages to get around Material UI's checkbox disabling.
 
@@ -360,7 +360,7 @@ Did some reading around integration testing, eventually realising that what the 
 
 Eliminated the `act()` errors. For `StockList.test.tsx` this involved merging the first three tests in to one (something which made sense anyway) and for `StockChart.test.tsx` wrapping all of the `store.dispatch()` calls in an `act(() => {})` call.
 
-# 2025-11-07
+## 2025-11-07
 
 I'd forgotten about playwright. OK, that's not quite true; I hadn't twigged it was an end to end testing library. I've therefore installed it (v1.48.2 because of the MacOS version on this MacBook and the limitations of my of node.js version) and shall proceed to read the docs. `npx playwright install` gave me problems for a bit because it wouldn't install WebKit (again, machine age related) but `npx playwright install [firefox|chromium]` got around that.
 
