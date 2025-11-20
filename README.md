@@ -404,3 +404,9 @@ which also worked so I'll go with that instead.
 *Dates are out of order as everything from this point onwards is the branch rather than the base*
 
 Switched over to modern Redux today, aka ReactToolkit. I read the first four pages of the Redux Essentials tutorial last week and I was pleasantly suprised at how easy it was to migrate from old style to new. Obviously the tests exploded but they were easy enough to update. I grimaced a bit when I realised that I'd have to change `test-utils.tsx` but the necessary adjustments were simple.
+
+## 2025-11-18
+
+Async data, aka API calls. It doesn't make sense for this app but I am going to do it anyway.
+
+So first I had to understand what a [thunk actually was](https://daveceddia.com/what-is-a-thunk/). Turns out it is just a name for a function which returns a function (aka naming is hard - and I'm bad at putting names to concepts) before finding out [how they work](https://medium.com/fullstack-academy/thunks-in-redux-the-basics-85e538a3fe60). Whist reading that I did wonder if Helen S et al thought about doing it this way at F1000 but I can see how it would quickly have gotten out of hand given the cascade of calls that were made to fetch articles. The Redux Sagas approach makes sense there (even if most interviewers look at me weirdly/with befuddlement if I mention them).
