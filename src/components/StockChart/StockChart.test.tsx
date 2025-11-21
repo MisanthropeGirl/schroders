@@ -255,6 +255,41 @@ describe('StockChart', () => {
     );
   });
 
+  test('it should update all existing tickers when date range changes', async () => {
+    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
+      .mockResolvedValueOnce({ results: A })
+      .mockResolvedValueOnce({ results: AA });
+
+    const { store } = render(<StockChart />, {
+      preloadedState: {
+        selectedTickers: ['A', 'AA']
+      }
+    });
+
+    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
+    expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
+    expect(dataFetchSpy).toHaveBeenCalledTimes(2);
+
+    act(() => store.dispatch(setFromDate(DATE_MIDDLE)));
+    await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(4));
+
+    expect(dataFetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('A/'),
+      expect.any(Object)
+    );
+    expect(dataFetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('AA/'),
+      expect.any(Object)
+    );
+
+    expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
+
+    // Flush all pending promises and state updates
+    await act(async () => {
+      await Promise.resolve();
+    });
+  });
+
   test('it should do nothing when date range changes if there are no tickers', async () => {
     const dataFetchSpy = jest.spyOn(utilities, 'dataFetch').mockResolvedValueOnce({ results: A })
 

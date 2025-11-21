@@ -6,7 +6,7 @@ This is not a read me in the traditional sense but rather a diary of thngs I lea
 
 ## 2025-10-04
 
-Added old school style Redux (aka what I know thanks to my time at F1000). This is the first time I've done this from scratch (Helen L, Goran N and Igot T did this work for F1000) so it was all about seeing if I actually understood what I thought I did from that time.
+Added old school style Redux (aka what I know thanks to my time at F1000). This is the first time I've done this from scratch (Helen S, Goran N and Igor T did this work for F1000) so it was all about seeing if I actually understood what I thought I did from that time.
 
 Bit of a faff (some of which was removing the prop-drilling I had initially gone with). I have set an initial state for several parameters which I believe makes sense in the circumstances.
 
@@ -381,3 +381,20 @@ I was supposed to be seeing about switching out the redux approach I've been usi
 My changes resulted a flaw which only become evident when I ran the test suite, viz two of the `useEffect`'s were fired when `selectedTickers` was pre-populated. Not that I could see what the reason was but Claude could and it proposed the adopted solution.
 
 I can also, as a result of this refactoring, eliminate the final useEffect and move that logic in to first one.
+
+## 2025-11-20
+
+Realised that what I thought was an intermittent issue with changing the dates was actually replicable every time. In summary, when there are multiple tickers and the date range is changed only one of the tickers reflects the new date range in the chart. Doing some digging confirms that all of the API calls are being made but that there would appear to be a race condition going on when it comes to updating the state, i.e. the second and subsequent API calls are being triggered before the state update for the previous one has finished so old data is being used when the data array is being mutated (via a shallow copy).
+
+Not seeing any way around this using standard react (unless I wanted to use a timeout in the loop), I installed the `use-immer` library/hook so I could manipulate the state and solve the issue.
+
+Testing this took a while as the test never ran `setData`. After a bit of back and forth with Claude (it took a while for it to catch up) it told me that this was because the test was completing before `setData` was executed and suggested adding a timeout just to give the test the necessary time. Whilst that worked, I am not a fan of timeouts so asked for a better solution and got
+
+```
+// Flush all pending promises and state updates
+await act(async () => {
+  await Promise.resolve();
+});
+```
+
+which also worked so I'll go with that instead.

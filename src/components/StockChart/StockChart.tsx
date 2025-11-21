@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useImmer } from "use-immer";
 import { dataFetch, dataTransform } from '../../utilities';
 import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
 import * as Highcharts from 'highcharts';
@@ -8,15 +9,15 @@ import { useSelector } from "react-redux";
 import { selectFromDate, selectPriceOption, selectSelectedTickers, selectToDate } from "../../selectors";
 
 function StockChart() {
-  const [data, setData] = useState<RawChartData[]>([]);
+  const [data, setData] = useImmer<RawChartData[]>([]);
   const [error, setError] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(true);
-  
+
   const selectedTickers = useSelector(selectSelectedTickers);
   const fromDate = useSelector(selectFromDate);
   const toDate = useSelector(selectToDate);
   const priceOption = useSelector(selectPriceOption);
-  
+
   const isInitialMount = useRef(true);
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
@@ -30,9 +31,14 @@ function StockChart() {
         }
       );
 
-      // remove existing data for the ticker
-      const temp = data.filter(it => it.ticker !== ticker);
-      setData([...temp, { ticker, data: stockData.results }]);
+      const tickerIndex = data.findIndex(it => it.ticker === ticker);
+      setData((draft) => {
+        if (tickerIndex > -1) {
+          draft[tickerIndex].data = stockData.results;
+        } else {
+          draft.push({ ticker, data: stockData.results });
+        }
+      })
       setError(false);
     }
     catch (err: unknown) {
@@ -41,7 +47,6 @@ function StockChart() {
       } else {
         setError('There was an error. Please refer to the console.');
       }
-      setData([]);
     }
     finally {
       setLoading(false);
