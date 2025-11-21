@@ -22,12 +22,6 @@ const reducer = (state: Store = initialState, action: AnyAction): Store => {
       case ACTION_TYPES.SET_CHART_PRICING_OPTION:
         draft.priceOption = action.payload;
         break;
-      case ACTION_TYPES.SET_NEW_TICKER:
-        draft.newTicker = action.payload;
-        break;
-      case ACTION_TYPES.SET_REMOVED_TICKER:
-        draft.removedTicker = action.payload;
-        break;
       case ACTION_TYPES.SET_SELECTED_TICKERS:
         if (state.selectedTickers.includes(action.payload)) {
           draft.selectedTickers = state.selectedTickers.filter(it => it !== action.payload);
