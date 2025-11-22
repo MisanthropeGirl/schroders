@@ -1,72 +1,40 @@
-import { ChangeEvent, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { ChangeEvent, useEffect } from 'react';
 import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
-import { selectedTickersUpdated, selectSelectedTickers } from './stockListSlice';
-import { POLYGON_LIST_URL } from '../../constants';
-import { dataFetch } from '../../utilities';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { fetchStocks, selectedStocksUpdated, selectStocksSelected, selectStocksError, selectStocksStatus, selectStocks } from './stockListSlice';
 
 function StockList() {
-  const [data, setData] = useState<Stock[]>([]);
-  const [error, setError] = useState<boolean | string>(false);
-  const [loading, setLoading] = useState(true);
-
-  const selectedTickers = useSelector(selectSelectedTickers);
-
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch();
+  const stockList = useAppSelector(selectStocks);
+  const selectedStocks = useAppSelector(selectStocksSelected);
+  const status = useAppSelector(selectStocksStatus);
+  const error = useAppSelector(selectStocksError);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const stockList = await dataFetch(
-          POLYGON_LIST_URL,
-          {
-            market: 'stocks',
-            type: 'CS',
-            exchange: 'XNYS',
-            active: true,
-            order: 'asc',
-            limit: 100,
-            sort: 'ticker'
-          }
-        );
-        setData(stockList.results);
-        setError(false);
-      }
-      catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('There was an error. Please refer to the console.');
-        }
-        setData([])
-      }
-      finally {
-        setLoading(false);
-      }
+    if (status === 'idle') {
+      dispatch(fetchStocks());
     }
-
-    loadData();
-  }, [])
+  }, [status, dispatch])
 
   const handleClickEvent = (e: ChangeEvent<HTMLInputElement>): void => {
     const ticker = e.target.value;
 
     if (e.target.checked) {
-      if (selectedTickers.length < 3) {
-        dispatch(selectedTickersUpdated(ticker));
+      if (selectedStocks.length < 3) {
+        dispatch(selectedStocksUpdated(ticker));
       }
     } else {
-      dispatch(selectedTickersUpdated(ticker));
+      dispatch(selectedStocksUpdated(ticker));
     }
   };
 
-  if (loading) {
+  if (status === 'rejected') {
+    return (<div>{error}</div>);
+  }
+
+  if (status === 'idle' || status === 'pending') {
     return <div>Loading table</div>;
   }
-  
-  if (error) {
-    return (<div>{error}</div>);
-  } 
 
   return (
     // In the real world there would probably be fewer rows on show at any time
@@ -84,13 +52,13 @@ function StockList() {
         </TableRow>
       </TableHead>
       <TableBody>
-        {(data || []).map((stock: Stock, index: number) => {
+        {(stockList || []).map((stock: Stock, index: number) => {
           return (
             <TableRow key={index} hover>
               <TableCell>
                 <Checkbox
                   value={stock.ticker}
-                  disabled={selectedTickers.length > 2 && !selectedTickers.includes(stock.ticker)}
+                  disabled={selectedStocks.length > 2 && !selectedStocks.includes(stock.ticker)}
                   slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
                   onChange={handleClickEvent}
                 />

@@ -79,3 +79,5 @@ interface ChartOptions {
 interface StockList {
   selectedTickers: string[];
 }
+
+type Status = 'idle' | 'pending' | 'succeeded' | 'rejected';

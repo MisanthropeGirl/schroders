@@ -1,86 +1,43 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useImmer } from "use-immer";
-import { useSelector } from "react-redux";
+import { useEffect, useRef } from "react";
 import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { PRICE_SERIES_CODES } from "../../constants";
+import { dataTransform } from '../../utilities';
 import { selectFromDate, selectPriceOption, selectToDate } from "../ChartOptions/chartOptionsSlice";
-import { selectSelectedTickers } from "../StockList/stockListSlice";
-import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
-import { dataFetch, dataTransform } from '../../utilities';
+import { selectChartStatus, selectChartError, fetchChartData, selectChartData } from "./stockChartSlice";
+import { selectStocksSelected } from "../StockList/stockListSlice";
 import './StockChart.css';
 
 function StockChart() {
-  const [data, setData] = useImmer<RawChartData[]>([]);
-  const [error, setError] = useState<boolean | string>(false);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectChartData);
+  const status = useAppSelector(selectChartStatus);
+  const error = useAppSelector(selectChartError);
 
-  const selectedTickers = useSelector(selectSelectedTickers);
-  const fromDate = useSelector(selectFromDate);
-  const toDate = useSelector(selectToDate);
-  const priceOption = useSelector(selectPriceOption);
+  const selectedStocks = useAppSelector(selectStocksSelected);
+  const fromDate = useAppSelector(selectFromDate);
+  const toDate = useAppSelector(selectToDate);
+  const priceOption = useAppSelector(selectPriceOption);
 
   const isInitialMount = useRef(true);
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
   const loadData = async (ticker: string, from: string = fromDate, to: string = toDate) => {
-    try {
-      const stockData = await dataFetch(
-        `${POLYGON_DATA_URL}/${ticker}/range/1/day/${from}/${to}`,
-        {
-          adjusted: true,
-          sort: 'asc',
-        }
-      );
-
-      const tickerIndex = data.findIndex(it => it.ticker === ticker);
-      setData((draft) => {
-        if (tickerIndex > -1) {
-          draft[tickerIndex].data = stockData.results;
-        } else {
-          draft.push({ ticker, data: stockData.results });
-        }
-      })
-      setError(false);
-    }
-    catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('There was an error. Please refer to the console.');
-      }
-    }
-    finally {
-      setLoading(false);
-    }
+    dispatch(fetchChartData({ ticker, from, to }));
   }
 
   useEffect(() => {
-    if (selectedTickers.length === 0) {
-      setLoading(true);
-      return;
-    }
-
     // loop through selected tickers and if there isn't a corresponding entry in
     // data then fetch data for that ticker
-    selectedTickers.forEach(ticker => {
+    // data removal and chart visiblity is handled in the slice
+    selectedStocks.forEach(ticker => {
       if (data.findIndex(d => d.ticker === ticker) === -1) {
         loadData(ticker);
       }
     });
-
-    // loop over data and see if there is a match in selectedTickers
-    // remove the entry if there isn't
-    let removedTicker = '';
-    data.forEach(it => {
-      if (!selectedTickers.includes(it.ticker)) {
-        removedTicker = it.ticker;
-      }
-    });
-    if (removedTicker !== '') {
-      setData(data => data.filter(d => d.ticker !== removedTicker));
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTickers]);
+  }, [selectedStocks, dispatch]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -88,24 +45,24 @@ function StockChart() {
       return;
     }
 
-    if (selectedTickers.length > 0) {
-      selectedTickers.forEach(ticker => loadData(ticker, fromDate, toDate));
+    if (selectedStocks.length > 0) {
+      selectedStocks.forEach(ticker => loadData(ticker, fromDate, toDate));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDate, toDate]);
 
-  if (loading) {
+  if (status === 'rejected') {
     return (
       <div className="chart">
-        <div className="chartMsg">Awaiting data</div>
+        <div className="chartMsg">{error}</div>
       </div>
     );
   }
 
-  if (error) {
+  if (status === 'pending') {
     return (
       <div className="chart">
-        <div className="chartMsg">{error}</div>
+        <div className="chartMsg">Awaiting data</div>
       </div>
     );
   }

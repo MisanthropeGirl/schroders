@@ -410,3 +410,11 @@ Switched over to modern Redux today, aka ReactToolkit. I read the first four pag
 Async data, aka API calls. It doesn't make sense for this app but I am going to do it anyway.
 
 So first I had to understand what a [thunk actually was](https://daveceddia.com/what-is-a-thunk/). Turns out it is just a name for a function which returns a function (aka naming is hard - and I'm bad at putting names to concepts) before finding out [how they work](https://medium.com/fullstack-academy/thunks-in-redux-the-basics-85e538a3fe60). Whist reading that I did wonder if Helen S et al thought about doing it this way at F1000 but I can see how it would quickly have gotten out of hand given the cascade of calls that were made to fetch articles. The Redux Sagas approach makes sense there (even if most interviewers look at me weirdly/with befuddlement if I mention them).
+
+## 2025-11-22
+
+The API calls have now moved to the slices. Making the change wasn't difficult but I did get hung up on the tests for both `StockChart.tsx` and `StockList.tsx`.
+
+In the later I was trying to test the check which stops `fetchStocks` being called twice (only happens locally because of `StrictMode`). I was trying to check that the call wasn't happening twice with `.toHaveBeenCalled()` but that didn't do it because it's one call on each render. I needed to manually dispatch the second call.
+
+For the former I scratched my head for some time without success as to why many of the tests had stopped working before taking a break. Returning to it later I realised that I'd changed the shape of the object being sent to the reducer (ticker now coming from the API response rather the function arguments). Once the penny had dropped and I'd updated the tests appropriately then all was fine.

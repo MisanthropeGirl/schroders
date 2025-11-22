@@ -1,8 +1,9 @@
 import userEvent from '@testing-library/user-event';
 import StockList from './StockList';
+import { fetchStocks, initialState } from './stockListSlice';
+import { stockList } from '../../mocks/StockList';
 import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
 import * as utilities from '../../utilities';
-import { stockList } from '../../mocks/StockList';
 
 describe('StockList', () => {
   beforeEach(() => {
@@ -62,6 +63,25 @@ describe('StockList', () => {
     expect(table.getElementsByTagName('input').length).toEqual(0);
   });
 
+  test('it prevents duplicate fetchStocks calls', async() => {
+    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch');
+  
+    const { store } = render(<StockList />);
+  
+    await waitForElementToBeRemoved(() => screen.queryByText('Loading table'));
+    await waitFor(() => screen.getByTestId('stocklist'));
+  
+    // First call completed
+    expect(dataFetchSpy).toHaveBeenCalledTimes(1);
+    expect(store.getState().stocks.status).toBe('succeeded');
+  
+    // Manually try to fetch again - should be blocked
+    await store.dispatch(fetchStocks());
+  
+    // Still only 1 call to the API
+    expect(dataFetchSpy).toHaveBeenCalledTimes(1);
+  });
+
   test('handles data with missing currency field gracefully', async () => {
     const dataWithMissingCurrency = [
       { ...stockList[0], currency_name: undefined }
@@ -109,10 +129,10 @@ describe('StockList', () => {
 
     // Check then uncheck
     await user.click(checkboxes[0]);
-    expect(store.getState().stocks.selectedTickers).toContain(stockList[0].ticker);
+    expect(store.getState().stocks.selectedStocks).toContain(stockList[0].ticker);
 
     await user.click(checkboxes[0]);
-    expect(store.getState().stocks.selectedTickers).not.toContain(stockList[0].ticker);
+    expect(store.getState().stocks.selectedStocks).not.toContain(stockList[0].ticker);
   });
 
   test('checkboxes have accessible labels', async () => {
@@ -130,7 +150,8 @@ describe('StockList', () => {
     const { store } = render(<StockList />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A', 'AA', 'AAM']
+          ...initialState,
+          selectedStocks: ['A', 'AA', 'AAM']
         }
       }
     });
@@ -140,7 +161,7 @@ describe('StockList', () => {
     const table: HTMLTableElement = screen.getByTestId('stocklist');
     const checkboxes = table.getElementsByTagName('input');
 
-    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
+    expect(store.getState().stocks.selectedStocks).toHaveLength(3);
     expect(checkboxes[3]).toBeDisabled();
 
     // Try to click it anyway (userEvent will allow this)
@@ -151,14 +172,15 @@ describe('StockList', () => {
       // userEvent might throw for disabled elements
     }
 
-    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
+    expect(store.getState().stocks.selectedStocks).toHaveLength(3);
   });
 
   test('it defensively ignores attempts to add a fourth ticker even if UI is bypassed', async () => {
     const { store } = render(<StockList />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A', 'AA', 'AAM']
+          ...initialState,
+          selectedStocks: ['A', 'AA', 'AAM']
         }
       }
     });
@@ -168,7 +190,7 @@ describe('StockList', () => {
     const table: HTMLTableElement = screen.getByTestId('stocklist');
     const checkboxes = table.getElementsByTagName('input');
 
-    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
+    expect(store.getState().stocks.selectedStocks).toHaveLength(3);
 
     // Now simulate a malicious/buggy scenario: manually enable and check the 4th checkbox
     const fourthCheckbox = checkboxes[3] as HTMLInputElement;
@@ -176,8 +198,8 @@ describe('StockList', () => {
     fireEvent.click(fourthCheckbox);
 
     // The defensive logic should prevent the 4th ticker from being added
-    expect(store.getState().stocks.selectedTickers).toHaveLength(3);
-    expect(store.getState().stocks.selectedTickers).not.toContain(stockList[3].ticker);
+    expect(store.getState().stocks.selectedStocks).toHaveLength(3);
+    expect(store.getState().stocks.selectedStocks).not.toContain(stockList[3].ticker);
   });
 
   test('it should display an error message when data fetch fails with Error', async () => {
@@ -192,7 +214,7 @@ describe('StockList', () => {
   });
 
   test('it should display a generic error message when fetch fails with non-Error', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce('Unknown error');
+    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce({ name: 'CustomError' });
 
     render(<StockList />);
 

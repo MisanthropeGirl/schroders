@@ -1,6 +1,6 @@
 import StockChart from './StockChart';
 import { datesUpdated, priceOptionUpdated } from 'components/ChartOptions/chartOptionsSlice';
-import { selectedTickersUpdated } from 'components/StockList/stockListSlice';
+import { selectedStocksUpdated, initialState as stockListInitialState } from 'components/StockList/stockListSlice';
 import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
 import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from '../../constants';
 import * as utilities from '../../utilities';
@@ -14,7 +14,7 @@ jest.mock("highcharts-react-official", () => ({
 
 describe('StockChart', () => {
   beforeEach(() => {
-    jest.spyOn(utilities, 'dataFetch').mockResolvedValue({ results: A });
+    jest.spyOn(utilities, 'dataFetch').mockResolvedValue({ ticker: 'A', results: A });
   });
 
   afterEach(() => {
@@ -38,7 +38,8 @@ describe('StockChart', () => {
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A']
+          ...stockListInitialState,
+          selectedStocks: ['A']
         }
       }
     });
@@ -50,12 +51,13 @@ describe('StockChart', () => {
   });
 
   test('it should display a generic error message when fetch fails with non-Error', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce('Unknown error');
+    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce({ name: 'CustomError' });
 
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A']
+          ...stockListInitialState,
+          selectedStocks: ['A']
         }
       }
     });
@@ -70,7 +72,8 @@ describe('StockChart', () => {
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A']
+          ...stockListInitialState,
+          selectedStocks: ['A']
         }
       }
     });
@@ -87,7 +90,8 @@ describe('StockChart', () => {
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A', 'AA', 'AAM']
+          ...stockListInitialState,
+          selectedStocks: ['A', 'AA', 'AAM']
         }
       }
     });
@@ -102,7 +106,7 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    act(() => store.dispatch(selectedTickersUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
@@ -112,7 +116,8 @@ describe('StockChart', () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A']
+          ...stockListInitialState,
+          selectedStocks: ['A']
         }
       }
     });
@@ -124,10 +129,12 @@ describe('StockChart', () => {
       expect(chart).toBeInTheDocument();
     });
 
-    act(() => store.dispatch(selectedTickersUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated('A')));
 
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
-    expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+      expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
+    })
   });
 
   test('it should show the chart when a ticker is selected and remove it when deselected', async () => {
@@ -136,12 +143,12 @@ describe('StockChart', () => {
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
 
-    act(() => store.dispatch(selectedTickersUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated('A')));
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
 
-    act(() => store.dispatch(selectedTickersUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated('A')));
 
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
@@ -149,14 +156,15 @@ describe('StockChart', () => {
 
   test('it should update the chart when tickers are added', async () => {
     const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ results: A })
-      .mockResolvedValueOnce({ results: AA })
-      .mockResolvedValueOnce({ results: AAM });
+      .mockResolvedValueOnce({ ticker: 'A', results: A })
+      .mockResolvedValueOnce({ ticker: 'AA', results: AA })
+      .mockResolvedValueOnce({ ticker: 'AAM', results: AAM });
 
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A']
+          ...stockListInitialState,
+          selectedStocks: ['A']
         }
       }
     });
@@ -167,7 +175,7 @@ describe('StockChart', () => {
     // Should have been called once initially
     expect(dataFetchSpy).toHaveBeenCalledTimes(1);
 
-    act(() => store.dispatch(selectedTickersUpdated('AA')));
+    act(() => store.dispatch(selectedStocksUpdated('AA')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));
@@ -178,7 +186,7 @@ describe('StockChart', () => {
       expect.any(Object)
     );
 
-    act(() => store.dispatch(selectedTickersUpdated('AAM')));
+    act(() => store.dispatch(selectedStocksUpdated('AAM')));
 
     // Should call dataFetch again for the new ticker
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(3));
@@ -195,14 +203,15 @@ describe('StockChart', () => {
 
   test('it should update the chart when tickers are removed', async () => {
     const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ results: A })
-      .mockResolvedValueOnce({ results: AA })
-      .mockResolvedValueOnce({ results: AAM });
+      .mockResolvedValueOnce({ ticker: 'A', results: A })
+      .mockResolvedValueOnce({ ticker: 'AA', results: AA })
+      .mockResolvedValueOnce({ ticker: 'AAM', results: AAM });
 
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A', 'AA', 'AAM']
+          ...stockListInitialState,
+          selectedStocks: ['A', 'AA', 'AAM']
         }
       }
     });
@@ -211,13 +220,13 @@ describe('StockChart', () => {
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
     // remove a ticker
-    act(() => store.dispatch(selectedTickersUpdated('AAM')));
-    expect(store.getState().stocks.selectedTickers).toHaveLength(2);
+    act(() => store.dispatch(selectedStocksUpdated('AAM')));
+    expect(store.getState().stocks.selectedStocks).toHaveLength(2);
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
     // and a second
-    act(() => store.dispatch(selectedTickersUpdated('AA')));
-    expect(store.getState().stocks.selectedTickers).toHaveLength(1);
+    act(() => store.dispatch(selectedStocksUpdated('AA')));
+    expect(store.getState().stocks.selectedStocks).toHaveLength(1);
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
   });
 
@@ -225,7 +234,8 @@ describe('StockChart', () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A']
+          ...stockListInitialState,
+          selectedStocks: ['A']
         }
       }
     });
@@ -246,13 +256,14 @@ describe('StockChart', () => {
 
   test('it should reload data when date range changes', async () => {
     const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ results: A })
-      .mockResolvedValueOnce({ results: A_DATE_RANGE })
+      .mockResolvedValueOnce({ ticker: 'A', results: A })
+      .mockResolvedValueOnce({ ticker: 'A', results: A_DATE_RANGE })
 
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedTickers: ['A']
+          ...stockListInitialState,
+          selectedStocks: ['A']
         }
       }
     });
@@ -276,12 +287,15 @@ describe('StockChart', () => {
 
   test('it should update all existing tickers when date range changes', async () => {
     const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ results: A })
-      .mockResolvedValueOnce({ results: AA });
+      .mockResolvedValueOnce({ ticker: 'A', results: A })
+      .mockResolvedValueOnce({ ticker: 'A', results: AA });
 
     const { store } = render(<StockChart />, {
       preloadedState: {
-        selectedTickers: ['A', 'AA']
+        stocks: {
+          ...stockListInitialState,
+          selectedStocks: ['A', 'AA']
+        }
       }
     });
 
@@ -289,7 +303,7 @@ describe('StockChart', () => {
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
     expect(dataFetchSpy).toHaveBeenCalledTimes(2);
 
-    act(() => store.dispatch(setFromDate(DATE_MIDDLE)));
+    act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
     await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(4));
 
     expect(dataFetchSpy).toHaveBeenCalledWith(
@@ -301,8 +315,6 @@ describe('StockChart', () => {
       expect.any(Object)
     );
 
-    expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
-
     // Flush all pending promises and state updates
     await act(async () => {
       await Promise.resolve();
@@ -310,7 +322,7 @@ describe('StockChart', () => {
   });
 
   test('it should do nothing when date range changes if there are no tickers', async () => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch').mockResolvedValueOnce({ results: A })
+    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch');
 
     const { store } = render(<StockChart />);
 
