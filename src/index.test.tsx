@@ -6,16 +6,6 @@ jest.mock("highcharts-react-official", () => ({
   HighchartsReact: () => null,
 }));
 
-// jest.mock("./store", () => ({
-//   store: {
-//     getState: jest.fn(() => ({})),
-//     dispatch: jest.fn(),
-//     subscribe: jest.fn(),
-//   },
-// }));
-
-// jest.mock("./reportWebVitals", () => jest.fn());
-
 describe("Application root", () => {
   it("should render without crashing", () => {
     // Just test that App component can be imported and created

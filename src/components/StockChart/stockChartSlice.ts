@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { RootState } from "../../store";
+import { RootState } from "../../app/store";
 import { createAppAsyncThunk } from "../../app/withTypes";
 import { POLYGON_DATA_URL } from "../../constants";
 import { dataFetch } from "../../utilities";
