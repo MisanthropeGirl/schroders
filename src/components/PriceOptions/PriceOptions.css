@@ -1,0 +1,15 @@
+.option-group.option-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.option-group > label {
+  margin-right: 1rem;
+  color: #000;
+}
+
+.option-group > label.Mui-focused {
+  color: #000;
+}

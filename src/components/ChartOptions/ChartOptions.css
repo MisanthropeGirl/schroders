@@ -4,36 +4,3 @@
   padding-bottom: 2rem;
   text-align: center;
 }
-
-.option-group.option-group {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-
-.option-group > label {
-  margin-right: 1rem;
-  color: #000;
-}
-
-.option-group > label.Mui-focused {
-  color: #000;
-}
-
-.dates-group {
-  margin-top: 2rem;
-}
-
-.dates-group > div:first-child {
-  margin-right: 1rem;
-}
-
-.dates-group > div:last-child {
-  margin-left: 1rem;
-}
-
-.dates-error {
-  margin-top: 1rem;
-  color: red;
-}

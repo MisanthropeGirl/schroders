@@ -1,12 +1,14 @@
 import { Action, ThunkAction, combineReducers, configureStore } from '@reduxjs/toolkit';
-import chartOptionsReducer from './components/ChartOptions/chartOptionsSlice';
-import stockListReducer from './components/StockList/stockListSlice';
+import dateSelectorReducer from './components/DateSelector/dateSelectorSlice';
+import priceOptionsReducer from './components/PriceOptions/priceOptionsSlice';
 import stockChartReducer from './components/StockChart/stockChartSlice';
+import stockListReducer from './components/StockList/stockListSlice';
 
 export const rootReducer = combineReducers({
-  options: chartOptionsReducer,
+  chart: stockChartReducer,
+  dates: dateSelectorReducer,
+  price: priceOptionsReducer,
   stocks: stockListReducer,
-  chart: stockChartReducer
 })
 
 export const store = configureStore({

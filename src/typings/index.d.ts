@@ -68,16 +68,4 @@ interface SearchParams {
   type?: string;
 }
 
-type ChartPriceOptions = typeof chartPriceOptions[number];
-
-interface ChartOptions {
-  fromDate: string;
-  toDate: string;
-  priceOption: ChartPriceOptions;
-}
-
-interface StockList {
-  selectedTickers: string[];
-}
-
 type Status = 'idle' | 'pending' | 'succeeded' | 'rejected';

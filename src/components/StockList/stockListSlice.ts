@@ -11,7 +11,6 @@ interface StockListState {
   error: string | null;
 }
 
-
 export const initialState: StockListState = {
   stocks: [],
   selectedStocks: [],

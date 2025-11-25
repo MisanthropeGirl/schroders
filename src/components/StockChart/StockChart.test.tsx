@@ -1,6 +1,7 @@
 import StockChart from './StockChart';
-import { datesUpdated, priceOptionUpdated } from 'components/ChartOptions/chartOptionsSlice';
-import { selectedStocksUpdated, initialState as stockListInitialState } from 'components/StockList/stockListSlice';
+import { priceOptionUpdated } from '../PriceOptions/priceOptionsSlice';
+import { datesUpdated } from '../DateSelector/dateSelectorSlice';
+import { selectedStocksUpdated, initialState as stockListInitialState } from '../StockList/stockListSlice';
 import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
 import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from '../../constants';
 import * as utilities from '../../utilities';
