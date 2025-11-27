@@ -418,3 +418,11 @@ The API calls have now moved to the slices. Making the change wasn't difficult b
 In the later I was trying to test the check which stops `fetchStocks` being called twice (only happens locally because of `StrictMode`). I was trying to check that the call wasn't happening twice with `.toHaveBeenCalled()` but that didn't do it because it's one call on each render. I needed to manually dispatch the second call.
 
 For the former I scratched my head for some time without success as to why many of the tests had stopped working before taking a break. Returning to it later I realised that I'd changed the shape of the object being sent to the reducer (ticker now coming from the API response rather the function arguments). Once the penny had dropped and I'd updated the tests appropriately then all was fine.
+
+## 2025-11-26
+
+Looked at making performance improvments. I broke up `ChartOptions.tsx` a few days ago as it seemed as though there was some unnecessary rendering going on (if I'd read React DevTools' Profile tab correctly). Today I dropped much of the app in to Calude and asked it for further suggestions.
+
+Aside from a typo and a copy/paste error, its main feedback was the lack of caching, of which I am aware and fully intend to look in to at some future point, and `dataTransform` running after every call to the API which fetchs the data for the stock chart. The minor issues were a lack of deduplication (which for this app means rapidly checking, unchecking, rechecking etc on a particular stock) and using Array lookup functions rather than Set() since that is quicker (more of an issue if the limit of three stocks on the chart wasn't there).
+
+I'd been ambivilent about leaving `dataTransform` where it was anyway so was happy to rework that and move it in to the slice, only doing the transform for each API call result rather than every ticker curently selected. Along the way was I was introduced to [TypeScript's 'Recored' Utility Type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type) which made typing what I was doing so much easier. Using Set(), once I'd asked for some pointers, makes bits of the code look a lot cleaner (and is possible since there won't be any duplicates).

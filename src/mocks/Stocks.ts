@@ -1,4 +1,4 @@
-import { PRICE_SERIES_CODES } from "../constants";
+import { PRICE_SERIES_CODES, chartPriceOptions, createInitialChartDataState } from "../constants";
 import { dataTransform } from "../utilities";
 
 export const A: StockData[] = [
@@ -104,29 +104,25 @@ export const A: StockData[] = [
   }
 ];
 
-export const A_RAW_CHART_DATA: RawChartData[] = [{
-  ticker: 'A',
-  data: A
-}];
-
-export const A_CHART_DATA: { [key: string]: ChartData[] } = {};
-A_CHART_DATA['Open'] = dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.OPEN);
-A_CHART_DATA['High'] = dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.HIGH);
-A_CHART_DATA['Low'] = dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.LOW);
-A_CHART_DATA['Close'] = dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.CLOSE);
+export const A_CHART_DATA: Record<string, TransformedData[]> = createInitialChartDataState();
+chartPriceOptions.forEach(option => {
+  A_CHART_DATA[option].push({
+    'type': 'line',
+    'name': 'A',
+    'data': dataTransform(A, PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES])
+  });
+});
 
 export const A_DATE_RANGE: StockData[] = A.slice(3, 6);
 
-const A_DATE_RANGE_RAW_CHART_DATA: RawChartData[] = [{
-  ticker: 'A',
-  data: A_DATE_RANGE
-}];
-
-export const A_DATE_RANGE_CHART_DATA: { [key: string]: ChartData[] } = {};
-A_DATE_RANGE_CHART_DATA['Open'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.OPEN);
-A_DATE_RANGE_CHART_DATA['High'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.HIGH);
-A_DATE_RANGE_CHART_DATA['Low'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.LOW);
-A_DATE_RANGE_CHART_DATA['Close'] = dataTransform(A_DATE_RANGE_RAW_CHART_DATA, PRICE_SERIES_CODES.CLOSE);
+export const A_DATE_RANGE_CHART_DATA: Record<string, TransformedData[]> = createInitialChartDataState();
+chartPriceOptions.forEach(option => {
+  A_CHART_DATA[option].push({
+    'type': 'line',
+    'name': 'A',
+    'data': dataTransform(A_DATE_RANGE, PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES])
+  });
+});
 
 export const AA: StockData[] = A;
 export const AAM: StockData[] = A;

@@ -5,14 +5,14 @@ export const POLYGON_LIST_URL = 'https://api.polygon.io/v3/reference/tickers';
 export const POLYGON_DATA_URL = 'https://api.polygon.io/v2/aggs/ticker';
 
 export const chartPriceOptions = ['Close', 'High', 'Low', 'Open'] as const;
-
-export const PRICE_SERIES_CODES = {
+export const createInitialChartDataState = (): Record<string, TransformedData[]> => ({ 'Open' : [], 'High': [], 'Low': [], 'Close': [] });
+export const PRICE_SERIES_CODES: Record<string, string> = {
   CLOSE: 'c',
   HIGH: 'h',
-  LOW: 'c',
+  LOW: 'l',
   OPEN: 'o',
   TIME: 't',
-};
+} as const;
 
 // only have access to the last two years
 export const DATE_MAX = format(new Date(), 'yyyy-MM-dd');

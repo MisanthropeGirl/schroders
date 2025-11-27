@@ -1,7 +1,7 @@
-import { convertObjectToString, dataFetch, dataTransform } from '.';
-import { POLYGON_LIST_URL, PRICE_SERIES_CODES } from '../constants';
+import { convertObjectToString, dataFetch, dataTransform, removeTransformedDataFromStateByTicker } from '.';
+import { POLYGON_LIST_URL, PRICE_SERIES_CODES, createInitialChartDataState } from '../constants';
 import { stockList } from '../mocks/StockList';
-import { A_CHART_DATA, A_RAW_CHART_DATA } from 'mocks/Stocks';
+import { A, A_CHART_DATA } from 'mocks/Stocks';
 
 describe('convertObjectToString', () => {
   test('it will return an empty string if there is an empty object', () => {
@@ -150,10 +150,10 @@ describe('dataFetch', () => {
 
 describe('dataTransform', () => {
   test('it transforms the raw data in to that suitable for the chart', () => {
-    expect(dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.OPEN)).toStrictEqual(A_CHART_DATA['Open']);
-    expect(dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.HIGH)).toStrictEqual(A_CHART_DATA['High']);
-    expect(dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.LOW)).toStrictEqual(A_CHART_DATA['Low']);
-    expect(dataTransform(A_RAW_CHART_DATA, PRICE_SERIES_CODES.CLOSE)).toStrictEqual(A_CHART_DATA['Close']);
+    expect(dataTransform(A, PRICE_SERIES_CODES.OPEN)).toStrictEqual(A_CHART_DATA['Open'][0].data);
+    expect(dataTransform(A, PRICE_SERIES_CODES.HIGH)).toStrictEqual(A_CHART_DATA['High'][0].data);
+    expect(dataTransform(A, PRICE_SERIES_CODES.LOW)).toStrictEqual(A_CHART_DATA['Low'][0].data);
+    expect(dataTransform(A, PRICE_SERIES_CODES.CLOSE)).toStrictEqual(A_CHART_DATA['Close'][0].data);
   });
 
   test('it handles empty data array', () => {
@@ -164,9 +164,35 @@ describe('dataTransform', () => {
   });
 
   test('it handles invalid price key', () => {
-    const result = dataTransform(A_RAW_CHART_DATA, 'invalid_key');
-    
-    // Should return data with undefined values or handle gracefully
-    expect(result[0].data[0][1]).toBeUndefined();
+    const result = dataTransform(A, 'invalid_key');
+    expect(result[0][1]).toBeUndefined();
   });
-})
+});
+
+describe('removeTransformedDataFromStateByTicker', () => {
+  test('it removed transformed data from the state', () => {
+    const initialState: StockChartState = {
+      tickers: [],
+      data: A_CHART_DATA,
+      status: 'succeeded',
+      error: null,
+    }
+    const endState: StockChartState = {
+      ...initialState,
+      data: createInitialChartDataState(),
+    }
+    removeTransformedDataFromStateByTicker(initialState, 'A');
+    expect(initialState).toStrictEqual(endState);
+  });
+
+  test('it should do nothing if there is no ticker', () => {
+    const initialState: StockChartState = {
+      tickers: [],
+      data: A_CHART_DATA,
+      status: 'succeeded',
+      error: null,
+    }
+    removeTransformedDataFromStateByTicker(initialState, '');
+    expect(initialState).toStrictEqual(initialState);
+  })
+});

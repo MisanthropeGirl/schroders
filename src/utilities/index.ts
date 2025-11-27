@@ -1,4 +1,4 @@
-import { POLYGON_API_KEY, PRICE_SERIES_CODES } from './../constants';
+import { POLYGON_API_KEY, PRICE_SERIES_CODES, chartPriceOptions } from './../constants';
 
 export const dataFetch = async (url: string, options: SearchParams) => {
   const params = convertObjectToString(options);
@@ -15,15 +15,15 @@ export const convertObjectToString = (obj: object): string => {
   }, '');
 };
 
-export const dataTransform = (data: RawChartData[], key: string): ChartData[] => {
-  return data.map(stock => {
-    return {
-      'type': 'line',
-      'name': stock.ticker,
-      'data': stock.data.map(it => [
-        it[PRICE_SERIES_CODES.TIME as keyof StockData] as number,
-        it[key as keyof StockData] as number
-      ])
-    }
-  });
+export const dataTransform = (data: StockData[], key: string): TransformedChartData => {
+  return data.map(it => [
+    it[PRICE_SERIES_CODES.TIME as keyof StockData] as number,
+    it[key as keyof StockData] as number
+  ])
 }
+
+export const removeTransformedDataFromStateByTicker = (state: StockChartState, ticker: string) => {
+  chartPriceOptions.forEach(option => {
+    state.data[option] = state.data[option].filter(d => d.name !== ticker);
+  });
+};

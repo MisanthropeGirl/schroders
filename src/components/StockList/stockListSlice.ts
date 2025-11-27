@@ -19,7 +19,7 @@ export const initialState: StockListState = {
 };
 
 export const fetchStocks = createAppAsyncThunk('stocks/fetchStocks', async () => {
-  const response = await await dataFetch(
+  const response = await dataFetch(
     POLYGON_LIST_URL,
     {
       market: 'stocks',

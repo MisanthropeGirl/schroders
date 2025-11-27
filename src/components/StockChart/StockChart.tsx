@@ -2,17 +2,16 @@ import { useEffect, useRef } from "react";
 import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { PRICE_SERIES_CODES } from "../../constants";
-import { dataTransform } from '../../utilities';
 import { selectPriceOption } from "../PriceOptions/priceOptionsSlice";
 import { selectFromDate, selectToDate } from "../DateSelector/dateSelectorSlice";
-import { selectChartStatus, selectChartError, fetchChartData, selectChartData } from "./stockChartSlice";
+import { selectChartStatus, selectChartError, fetchChartData, selectChartData, selectChartTickers } from "./stockChartSlice";
 import { selectStocksSelected } from "../StockList/stockListSlice";
 import './StockChart.css';
 
 function StockChart() {
   const dispatch = useAppDispatch();
   const data = useAppSelector(selectChartData);
+  const existingChartTickers = new Set(useAppSelector(selectChartTickers));
   const status = useAppSelector(selectChartStatus);
   const error = useAppSelector(selectChartError);
 
@@ -29,15 +28,17 @@ function StockChart() {
   }
 
   useEffect(() => {
-    // loop through selected tickers and if there isn't a corresponding entry in
-    // data then fetch data for that ticker
+    if (selectedStocks.length === 0) {
+      return;
+    }
+
+    // Only fetch data for tickers not already in our array
     // data removal and chart visiblity is handled in the slice
-    selectedStocks.forEach(ticker => {
-      if (data.findIndex(d => d.ticker === ticker) === -1) {
-        loadData(ticker);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    selectedStocks
+      .filter(ticker => !existingChartTickers.has(ticker))
+      .forEach(ticker => loadData(ticker));
+
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStocks, dispatch]);
 
   useEffect(() => {
@@ -68,12 +69,6 @@ function StockChart() {
     );
   }
 
-  const transformedData: { [key: string]: ChartData[] } = {};
-  transformedData['Open'] = dataTransform(data, PRICE_SERIES_CODES.OPEN);
-  transformedData['High'] = dataTransform(data, PRICE_SERIES_CODES.HIGH);
-  transformedData['Low'] = dataTransform(data, PRICE_SERIES_CODES.LOW);
-  transformedData['Close'] = dataTransform(data, PRICE_SERIES_CODES.CLOSE);
-
   const chartOptions: Highcharts.Options = {
     chart: {
       type: 'line',
@@ -101,7 +96,7 @@ function StockChart() {
     },
     // Gave up trying to fix the typescript issue here and bypassed it
     // @ts-ignore comment
-    series: transformedData[priceOption]
+    series: data[priceOption]
   };
 
   return (

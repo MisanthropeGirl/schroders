@@ -46,15 +46,19 @@ interface StockData {
   vw?: number;
 }
 
-interface RawChartData {
-  ticker: string;
-  data: StockData[];
-}
+type TransformedChartData = [number, number][];
 
-interface ChartData {
+interface TransformedData {
   name: string;
   type: string;
-  data: [number, number][];
+  data: TransformedChartData;
+}
+
+interface StockChartState {
+  tickers: string[];
+  data: Record<string, TransformedData[]>;
+  status: Status;
+  error: string | null;
 }
 
 interface SearchParams {
