@@ -18,29 +18,32 @@ export const initialState: StockListState = {
   error: null,
 };
 
-export const fetchStocks = createAppAsyncThunk('stocks/fetchStocks', async () => {
-  const response = await dataFetch(
-    POLYGON_LIST_URL,
-    {
-      market: 'stocks',
-      type: 'CS',
-      exchange: 'XNYS',
-      active: true,
-      order: 'asc',
-      limit: 100,
-      sort: 'ticker'
-    }
-  );
-  return response.results;
-},
-{
-  condition(_arg, thunkApi) {
-    const status = selectStocksStatus(thunkApi.getState())
-    if (status !== 'idle') {
-      return false;
+export const fetchStocks = createAppAsyncThunk(
+  'stocks/fetchStocks',
+  async () => {
+    const response = await dataFetch(
+      POLYGON_LIST_URL,
+      {
+        market: 'stocks',
+        type: 'CS',
+        exchange: 'XNYS',
+        active: true,
+        order: 'asc',
+        limit: 100,
+        sort: 'ticker'
+      }
+    );
+    return response.results;
+  },
+  {
+    condition(_arg, thunkApi) {
+      const status = selectStocksStatus(thunkApi.getState())
+      if (status !== 'idle') {
+        return false;
+      }
     }
   }
-})
+);
 
 const stockListSlice = createSlice({
   name: "stocks",

@@ -52,24 +52,22 @@ function StockList() {
         </TableRow>
       </TableHead>
       <TableBody>
-        {(stockList || []).map((stock: Stock, index: number) => {
-          return (
-            <TableRow key={index} hover>
-              <TableCell>
-                <Checkbox
-                  value={stock.ticker}
-                  disabled={selectedStocks.length > 2 && !selectedStocks.includes(stock.ticker)}
-                  slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
-                  onChange={handleClickEvent}
-                />
-              </TableCell>
-              <TableCell>{stock.ticker}</TableCell>
-              <TableCell>{stock.name}</TableCell>
-              <TableCell>{stock.primary_exchange}</TableCell>
-              <TableCell>{stock.currency_name?.toUpperCase()}</TableCell>
-            </TableRow>
-          )
-        })}
+        {stockList?.map((stock: Stock) => (
+          <TableRow key={stock.ticker} hover>
+            <TableCell>
+              <Checkbox
+                value={stock.ticker}
+                disabled={selectedStocks.length > 2 && !selectedStocks.includes(stock.ticker)}
+                slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
+                onChange={handleClickEvent}
+              />
+            </TableCell>
+            <TableCell>{stock.ticker}</TableCell>
+            <TableCell>{stock.name}</TableCell>
+            <TableCell>{stock.primary_exchange}</TableCell>
+            <TableCell>{stock.currency_name?.toUpperCase()}</TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );

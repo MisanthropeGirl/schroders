@@ -26,16 +26,21 @@ function PriceOptions() {
         onChange={handlePriceOptionChange}
         defaultValue={chartPriceOptions[0]}
       >
-        {chartPriceOptions.map((option: ChartPriceOptions, index) => {
-          return (
-            <FormControlLabel
-              key={index}
-              control={<Radio slotProps={{input: { 'aria-label': `Select ${option}`, 'data-testid': `radio-${option}` } as MyRadioInputSlotPropsOverrides}} />}
-              label={option}
-              value={option}
-            />
-            )
-          })}
+        {chartPriceOptions.map((option: ChartPriceOptions) => (
+          <FormControlLabel
+            key={option}
+            control={
+              <Radio
+                slotProps={{input: {
+                  'aria-label': `Select ${option}`,
+                  'data-testid': `radio-${option}`
+                } as MyRadioInputSlotPropsOverrides}}
+              />
+            }
+            label={option}
+            value={option}
+          />
+        ))}
       </RadioGroup>
     </FormControl>
   );
