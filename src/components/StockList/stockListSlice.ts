@@ -1,22 +1,22 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { EntityState, PayloadAction, createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 import { createAppAsyncThunk } from "../../app/withTypes";
 import { POLYGON_LIST_URL } from "../../constants";
 import { dataFetch } from "../../utilities";
 
-interface StockListState {
-  stocks: Stock[];
+interface StockListState extends EntityState<StockWithId, string> {
   selectedStocks: string[];
   status: Status;
   error: string | null;
 }
 
-export const initialState: StockListState = {
-  stocks: [],
+const stocklistAdapter = createEntityAdapter<StockWithId>();
+
+export const initialState: StockListState = stocklistAdapter.getInitialState({
   selectedStocks: [],
   status: 'idle',
   error: null,
-};
+});
 
 export const fetchStocks = createAppAsyncThunk(
   'stocks/fetchStocks',
@@ -64,7 +64,10 @@ const stockListSlice = createSlice({
       })
       .addCase(fetchStocks.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.stocks = action.payload;
+        const stocksWithId = (action.payload || []).map((it: Stock) => {
+          return {...it, id: it.ticker}
+        });
+        stocklistAdapter.setAll(state, stocksWithId);
       })
       .addCase(fetchStocks.rejected, (state, action) => {
         state.status = 'rejected';
@@ -76,7 +79,12 @@ const stockListSlice = createSlice({
 export default stockListSlice.reducer;
 export const { selectedStocksUpdated } = stockListSlice.actions;
 
-export const selectStocks = (state: RootState) => state.stocks.stocks;
+export const {
+  selectAll: selectAllStocks,
+  selectById: selectStockById,
+  selectIds: selectStockIds,
+} = stocklistAdapter.getSelectors((state: RootState) => state.stocks);
+
 export const selectStocksSelected = (state: RootState) => state.stocks.selectedStocks;
 export const selectStocksStatus = (state: RootState) => state.stocks.status
 export const selectStocksError = (state: RootState) => state.stocks.error

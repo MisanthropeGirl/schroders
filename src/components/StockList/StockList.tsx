@@ -1,11 +1,15 @@
 import { ChangeEvent, useEffect } from 'react';
 import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { fetchStocks, selectedStocksUpdated, selectStocksSelected, selectStocksError, selectStocksStatus, selectStocks } from './stockListSlice';
+import { fetchStocks, selectedStocksUpdated, selectStocksSelected, selectStocksError, selectStocksStatus, selectStockById, selectStockIds } from './stockListSlice';
+
+interface StockListExceptProps {
+  stockId: string;
+}
 
 function StockList() {
   const dispatch = useAppDispatch();
-  const stockList = useAppSelector(selectStocks);
+  const stockIds = useAppSelector(selectStockIds)
   const selectedStocks = useAppSelector(selectStocksSelected);
   const status = useAppSelector(selectStocksStatus);
   const error = useAppSelector(selectStocksError);
@@ -36,6 +40,27 @@ function StockList() {
     return <div>Loading table</div>;
   }
 
+  function StockListExcept({ stockId }: StockListExceptProps) {
+    const stock = useAppSelector(state => selectStockById(state, stockId));
+    return (
+      <TableRow key={stock.ticker} hover>
+        <TableCell>
+          <Checkbox
+            value={stock.ticker}
+            checked={selectedStocks.includes(stock.ticker)}
+            disabled={selectedStocks.length > 2 && !selectedStocks.includes(stock.ticker)}
+            slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
+            onChange={handleClickEvent}
+          />
+        </TableCell>
+        <TableCell>{stock.ticker}</TableCell>
+        <TableCell>{stock.name}</TableCell>
+        <TableCell>{stock.primary_exchange}</TableCell>
+        <TableCell>{stock.currency_name?.toUpperCase()}</TableCell>
+      </TableRow>
+    );
+  }
+
   return (
     // In the real world there would probably be fewer rows on show at any time
     // And there'd be pagination
@@ -52,21 +77,8 @@ function StockList() {
         </TableRow>
       </TableHead>
       <TableBody>
-        {stockList?.map((stock: Stock) => (
-          <TableRow key={stock.ticker} hover>
-            <TableCell>
-              <Checkbox
-                value={stock.ticker}
-                disabled={selectedStocks.length > 2 && !selectedStocks.includes(stock.ticker)}
-                slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
-                onChange={handleClickEvent}
-              />
-            </TableCell>
-            <TableCell>{stock.ticker}</TableCell>
-            <TableCell>{stock.name}</TableCell>
-            <TableCell>{stock.primary_exchange}</TableCell>
-            <TableCell>{stock.currency_name?.toUpperCase()}</TableCell>
-          </TableRow>
+        {stockIds.map(stockId => (
+          <StockListExcept key={stockId} stockId={stockId} />
         ))}
       </TableBody>
     </Table>

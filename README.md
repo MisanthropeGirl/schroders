@@ -425,8 +425,19 @@ Looked at making performance improvments. I broke up `ChartOptions.tsx` a few da
 
 Aside from a typo and a copy/paste error, its main feedback was the lack of caching, of which I am aware and fully intend to look in to at some future point, and `dataTransform` running after every call to the API which fetchs the data for the stock chart. The minor issues were a lack of deduplication (which for this app means rapidly checking, unchecking, rechecking etc on a particular stock) and using Array lookup functions rather than Set() since that is quicker (more of an issue if the limit of three stocks on the chart wasn't there).
 
-I'd been ambivilent about leaving `dataTransform` where it was anyway so was happy to rework that and move it in to the slice, only doing the transform for each API call result rather than every ticker curently selected. Along the way was I was introduced to [TypeScript's 'Recored' Utility Type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type) which made typing what I was doing so much easier. Using Set(), once I'd asked for some pointers, makes bits of the code look a lot cleaner (and is possible since there won't be any duplicates).
+I'd been ambivilent about leaving `dataTransform` where it was anyway so was happy to rework that and move it in to the slice, only doing the transform for each API call result rather than every ticker curently selected. Along the way was I was introduced to [TypeScript's 'Record' Utility Type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type) which made typing what I was doing so much easier. Using Set(), once I'd asked for some pointers, makes bits of the code look a lot cleaner (and is possible since there won't be any duplicates).
 
 ## 2025-11-29
 
+### Part 1
 Fixed an issue whereby changing the price option caused Highcharts to throw an error. According to Claude this is because Highcharts is trying to mutate the data frozen by Redux/Immer, i.e. a direct consequence of moving the data transform to the slice. It provided several solutions, all but one using `JSON.parse(JSON.stringify())` at their core, to create a mutable copy of the data so that Highcharts can use it.
+
+### Part 2
+
+After reading the [section about data normalisation](https://redux.js.org/tutorials/essentials/part-6-performance-normalization#normalizing-data) and how it can be used to cut down on re-rendering I did look at trying to do this with the Stock List. Although I realised it would not stop anything re-rendering (the need to potentially update the disabled property of each checkbox every time one is checked/unchecked makes that impossible) I thought I'd go through the process of normalising the data anyway.
+
+The first problem I had was the lack of an actual ID property in the API response (there is, of course, a property which functions as such: 'ticker') so I extended my `Stock` type and added a property with the name of ID with the value from the 'ticker' property before the response is added to the state.
+
+The second was that the checkboxes were not showing as checked, even though if I checked enugh of them, the others were disabled. Explicitly adding the checked paramater with a piece of conditional logic, i.e. `checked={selectedStocks.includes(stock.ticker)}`, fixed this.
+
+I doubt the app gained anything by me doing this but I can see how normalisation helps. I know that we made use it at F1000 (even if I didn't how what it was called) and I'm thinking how I can make use of it for the Mount website as well, either when building the API output or processing it in the JavaScript afterwards.
