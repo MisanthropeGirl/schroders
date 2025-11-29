@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as Highcharts from 'highcharts';
 import { HighchartsReact } from 'highcharts-react-official';
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -53,6 +53,11 @@ function StockChart() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDate, toDate]);
 
+  const chartSeries = useMemo(() => 
+    JSON.parse(JSON.stringify(data[priceOption])),
+    [data, priceOption]
+  );
+
   if (status === 'rejected') {
     return (
       <div className="chart">
@@ -96,7 +101,7 @@ function StockChart() {
     },
     // Gave up trying to fix the typescript issue here and bypassed it
     // @ts-ignore comment
-    series: data[priceOption]
+    series: chartSeries
   };
 
   return (
