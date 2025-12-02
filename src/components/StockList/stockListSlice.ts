@@ -4,13 +4,15 @@ import { createAppAsyncThunk } from "../../app/withTypes";
 import { POLYGON_LIST_URL } from "../../constants";
 import { dataFetch } from "../../utilities";
 
-interface StockListState extends EntityState<StockWithId, string> {
+interface StockListState extends EntityState<Stock, string> {
   selectedStocks: string[];
   status: Status;
   error: string | null;
 }
 
-const stocklistAdapter = createEntityAdapter<StockWithId>();
+const stocklistAdapter = createEntityAdapter({
+  selectId: (stock: Stock) => stock.ticker
+});
 
 export const initialState: StockListState = stocklistAdapter.getInitialState({
   selectedStocks: [],
@@ -64,10 +66,7 @@ const stockListSlice = createSlice({
       })
       .addCase(fetchStocks.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        const stocksWithId = (action.payload || []).map((it: Stock) => {
-          return {...it, id: it.ticker}
-        });
-        stocklistAdapter.setAll(state, stocksWithId);
+        stocklistAdapter.setAll(state, action.payload);
       })
       .addCase(fetchStocks.rejected, (state, action) => {
         state.status = 'rejected';

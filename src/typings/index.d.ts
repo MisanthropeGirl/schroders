@@ -34,10 +34,6 @@ interface Stock {
   type?: string;
 }
 
-interface StockWithId extends Stock {
-  id: string;
-}
-
 interface StockData {
   c: number;
   h: number;

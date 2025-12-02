@@ -441,3 +441,7 @@ The first problem I had was the lack of an actual ID property in the API respons
 The second was that the checkboxes were not showing as checked, even though if I checked enugh of them, the others were disabled. Explicitly adding the checked paramater with a piece of conditional logic, i.e. `checked={selectedStocks.includes(stock.ticker)}`, fixed this.
 
 I doubt the app gained anything by me doing this but I can see how normalisation helps. I know that we made use it at F1000 (even if I didn't how what it was called) and I'm thinking how I can make use of it for the Mount website as well, either when building the API output or processing it in the JavaScript afterwards.
+
+## 2025-12-02
+
+Reading further in to [`createEntityAdapter`](https://redux-toolkit.js.org/api/createEntityAdapter) I discovered that there is a way to change which field it uses as its ID field so I took out my workaround.
