@@ -139,10 +139,18 @@ export const stockList: Stock[] = [
   },
 ];
 
-export const stockListApiOutput: StockListApiResult = {
+export const stockListApiOutput: StockListApiResponse = {
   "count": 10,
   "next_url": "https://api.polygon.io/v3/reference/tickers?cursor=YWN0aXZlPXRydWUmZGF0ZT0yMDIxLTA0LTI1JmxpbWl0PTEmb3JkZXI9YXNjJnBhZ2VfbWFya2VyPUElN0M5YWRjMjY0ZTgyM2E1ZjBiOGUyNDc5YmZiOGE1YmYwNDVkYzU0YjgwMDcyMWE2YmI1ZjBjMjQwMjU4MjFmNGZiJnNvcnQ9dGlja2Vy",
   "request_id": "e70013d92930de90e089dc8fa098888e",
   "results": stockList,
+  "status": "OK"
+};
+
+export const stockListApiOutputEmpty: StockListApiResponse = {
+  "count": 10,
+  "next_url": "https://api.polygon.io/v3/reference/tickers?cursor=YWN0aXZlPXRydWUmZGF0ZT0yMDIxLTA0LTI1JmxpbWl0PTEmb3JkZXI9YXNjJnBhZ2VfbWFya2VyPUElN0M5YWRjMjY0ZTgyM2E1ZjBiOGUyNDc5YmZiOGE1YmYwNDVkYzU0YjgwMDcyMWE2YmI1ZjBjMjQwMjU4MjFmNGZiJnNvcnQ9dGlja2Vy",
+  "request_id": "e70013d92930de90e089dc8fa098888e",
+  "results": [],
   "status": "OK"
 };

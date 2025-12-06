@@ -126,3 +126,14 @@ chartPriceOptions.forEach(option => {
 
 export const AA: StockData[] = A;
 export const AAM: StockData[] = A;
+
+export const stockDataApiOutput: StockDataApiResponse = {
+  "adjusted": true,
+  "count": 250,
+  "queryCount": 250,
+  "request_id": "889d3e0da427f16f9ed52e0ae83f7e8f",
+  "results": [],
+  "resultsCount": 250,
+  "status": "DELAYED",
+  "ticker": "AAP",
+};

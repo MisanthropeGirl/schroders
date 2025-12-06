@@ -1,10 +1,10 @@
-interface ApiResult {
-  next_url: string;
+interface ApiResponse {
+  count: number;
   request_id: string;
   status: string;
 }
 
-interface StockDataApiResult extends ApiResult {
+interface StockDataApiResponse extends ApiResponse {
   adjusted: boolean;
   queryCount: number;
   request_id: string;
@@ -13,8 +13,8 @@ interface StockDataApiResult extends ApiResult {
   ticker: string;
 }
 
-interface StockListApiResult extends ApiResult {
-  count: number;
+interface StockListApiResponse extends ApiResponse {
+  next_url: string;
   results: Stock[];
 }
 
@@ -53,23 +53,3 @@ interface TransformedData {
   type: string;
   data: TransformedChartData;
 }
-
-interface StockChartState {
-  tickers: string[];
-  data: Record<string, TransformedData[]>;
-  status: Status;
-  error: string | null;
-}
-
-interface SearchParams {
-  active?: boolean;
-  adjusted?: boolean;
-  exchange?: string;
-  limit?: number;
-  market?: string;
-  order?: 'asc' | 'desc';
-  sort?: string;
-  type?: string;
-}
-
-type Status = 'idle' | 'pending' | 'succeeded' | 'rejected';

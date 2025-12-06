@@ -1,4 +1,5 @@
 import { Action, ThunkAction, combineReducers, configureStore } from '@reduxjs/toolkit';
+import { apiSlice } from './apiSlice';
 import dateSelectorReducer from '../components/DateSelector/dateSelectorSlice';
 import priceOptionsReducer from '../components/PriceOptions/priceOptionsSlice';
 import stockChartReducer from '../components/StockChart/stockChartSlice';
@@ -9,10 +10,14 @@ export const rootReducer = combineReducers({
   dates: dateSelectorReducer,
   price: priceOptionsReducer,
   stocks: stockListReducer,
+  [apiSlice.reducerPath]: apiSlice.reducer
 })
 
 export const store = configureStore({
-  reducer: rootReducer
+  reducer: rootReducer,
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware()
+      .concat(apiSlice.middleware)
 });
 
 // Infer the type of `store`
@@ -21,5 +26,3 @@ export type AppStore = typeof store;
 export type AppDispatch = typeof store.dispatch;
 // Same for the `RootState` type
 export type RootState = ReturnType<typeof store.getState>;
-// Export a reusable type for handwritten thunks
-export type AppThunk = ThunkAction<void, RootState, unknown, Action>

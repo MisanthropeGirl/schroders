@@ -1,13 +1,28 @@
 import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen, waitFor } from '../../test-utils';
+import { useGetStockListQuery } from '../../app/apiSlice';
+import { initialState } from './stockListSlice';
 import StockList from './StockList';
-import { fetchStocks, initialState } from './stockListSlice';
-import { stockList } from '../../mocks/StockList';
-import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
-import * as utilities from '../../utilities';
+import { stockListApiOutput, stockListApiOutputEmpty, stockList } from '../../mocks/StockList';
+
+// Mock the entire API slice
+jest.mock('../../app/apiSlice', () => ({
+  ...jest.requireActual('../../app/apiSlice'),
+  useGetStockListQuery: jest.fn(),
+}));
+
+const mockUseGetStockListQuery = useGetStockListQuery as jest.MockedFunction<typeof useGetStockListQuery>;
 
 describe('StockList', () => {
   beforeEach(() => {
-    jest.spyOn(utilities, 'dataFetch').mockResolvedValue({ results: stockList });
+    // Default successful mock
+    mockUseGetStockListQuery.mockReturnValue({
+      data: stockListApiOutput,
+      isLoading: false,
+      isSuccess: true,
+      isError: false,
+      error: undefined,
+    } as any);
   });
 
   afterEach(() => {
@@ -17,13 +32,24 @@ describe('StockList', () => {
   test('it renders without crashing', async () => {
     render(<StockList />);
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Loading table'))
-    expect(screen.queryByText('Loading table')).not.toBeInTheDocument();
-
     await waitFor(() => {
-      const table = screen.queryByTestId('stocklist');
-      expect(table).toBeInTheDocument();
+      expect(screen.queryByTestId('stocklist')).toBeInTheDocument();
     });
+  });
+
+  test('it should display loading state initially', () => {
+    mockUseGetStockListQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isSuccess: false,
+      isError: false,
+      error: undefined,
+    } as any);
+
+    render(<StockList />);
+
+    expect(screen.getByText('Loading table')).toBeInTheDocument();
+    expect(screen.queryByTestId('stocklist')).not.toBeInTheDocument();
   });
 
   test('it should display a table when the data fetch succeeds', async () => {
@@ -38,7 +64,13 @@ describe('StockList', () => {
   });
 
   test('it should display an empty table when the data fetch succeeds but there is an empty array', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockResolvedValueOnce({ results: [] });
+    mockUseGetStockListQuery.mockReturnValue({
+      data: stockListApiOutputEmpty,
+      isLoading: false,
+      isSuccess: true,
+      isError: false,
+      error: undefined,
+    } as any);
 
     render(<StockList />);
 
@@ -48,46 +80,23 @@ describe('StockList', () => {
 
     expect(table.tBodies[0].rows.length).toEqual(0);
     expect(table.getElementsByTagName('input').length).toEqual(0);
-  });
-
-  test('it should display an empty table when the data fetch succeeds but there is no data', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockResolvedValueOnce({ results: null });
-
-    render(<StockList />);
-
-    await waitFor(() => screen.getByTestId('stocklist'));
-
-    const table: HTMLTableElement = screen.getByTestId('stocklist');
-
-    expect(table.tBodies[0].rows.length).toEqual(0);
-    expect(table.getElementsByTagName('input').length).toEqual(0);
-  });
-
-  test('it prevents duplicate fetchStocks calls', async() => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch');
-  
-    const { store } = render(<StockList />);
-  
-    await waitForElementToBeRemoved(() => screen.queryByText('Loading table'));
-    await waitFor(() => screen.getByTestId('stocklist'));
-  
-    // First call completed
-    expect(dataFetchSpy).toHaveBeenCalledTimes(1);
-    expect(store.getState().stocks.status).toBe('succeeded');
-  
-    // Manually try to fetch again - should be blocked
-    await store.dispatch(fetchStocks());
-  
-    // Still only 1 call to the API
-    expect(dataFetchSpy).toHaveBeenCalledTimes(1);
   });
 
   test('handles data with missing currency field gracefully', async () => {
-    const dataWithMissingCurrency = [
-      { ...stockList[0], currency_name: undefined }
-    ];
+    const dataWithMissingCurrency = {
+      ...stockListApiOutput,
+      results: [
+        { ...stockList[0], currency_name: undefined }
+      ]
+    };
 
-    jest.spyOn(utilities, 'dataFetch').mockResolvedValueOnce({ results: dataWithMissingCurrency });
+    mockUseGetStockListQuery.mockReturnValue({
+      data: dataWithMissingCurrency,
+      isLoading: false,
+      isSuccess: true,
+      isError: false,
+      error: undefined,
+    } as any);
 
     render(<StockList />);
 
@@ -203,25 +212,17 @@ describe('StockList', () => {
   });
 
   test('it should display an error message when data fetch fails with Error', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce(new Error('Network error'));
+    mockUseGetStockListQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isSuccess: false,
+      isError: true,
+      error: new Error('Network error'),
+    } as any);
 
     render(<StockList />);
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Loading table'));
-
-    expect(screen.getByText('Network error')).toBeInTheDocument();
+    expect(screen.getByText('Error: Network error')).toBeInTheDocument();
     expect(screen.queryByTestId('stocklist')).not.toBeInTheDocument();
   });
-
-  test('it should display a generic error message when fetch fails with non-Error', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce({ name: 'CustomError' });
-
-    render(<StockList />);
-
-    await waitForElementToBeRemoved(() => screen.queryByText('Loading table'));
-
-    expect(screen.getByText('There was an error. Please refer to the console.')).toBeInTheDocument();
-    expect(screen.queryByTestId('stocklist')).not.toBeInTheDocument();
-  });
-
 });

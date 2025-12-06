@@ -445,3 +445,104 @@ I doubt the app gained anything by me doing this but I can see how normalisation
 ## 2025-12-02
 
 Reading further in to [`createEntityAdapter`](https://redux-toolkit.js.org/api/createEntityAdapter) I discovered that there is a way to change which field it uses as its ID field so I took out my workaround.
+
+## 2025-12-03
+
+Switched to using React Toolkit Query.
+
+Converting `StockList.tsx` was straightforward enough once I'd found the `params` option in the query callback. Since it is returning the entire API response I did try to use `responseHandler` to just pass the results but came unstuck. I do have a page of Google results to look at though so may come back to it.
+
+`StockChart.tsx` however was more difficult so the data fetch should only happen on user action. A search told me to use the trigger function returned by the `useLazyQuery` version of the generated hook and I initially found myself in making extensive changes to return the API result to the `useEffect`'s which felt far too complicated. Then I took a closer look at the other variables the hook gave and saw that the `result` variable gets updated when the trigger function is run. I'm not quite sure what voodoo is happening there but it seems to work.
+
+I then asked Claude if I was on the right track. The answer can best be described as 'sort of'.
+
+Things I learnt:
+1. I don't need to use async/await when calling the trigger function.
+2. Since the `result` object updates automatically when the requst completes I can listen for changes to parts of that object and use them to trigger a `useEffect` that will update the stored chart data. Obvious really.
+
+## 2025-12-04
+
+Realised before I called it a day yesterday that I'd re-introduced the race condition. I thought that `use-immer` would be able to get me out of that hole again but Claude told me that whilst I was right on the race condition I was wrong on the how. I thought that there were three updates with the last cancelling out the others but it is actually that each one overwrites the previous one. A subtle difference.
+
+The solution was to stop waiting for changes to the `result` object but instead make use of `.unwrap()` and handle each update (or promise) separately.
+
+That done, it was on to updating the tests for `StockList.tsx` and `StockChart.tsx`.
+
+When I tried to run the test suite I got an error: 'jest encountered an unexpected token export' from the '@standard-schema' module. I don't know which npm package that's a dependency of or why it should complain now but the solution was add [jest/transformIgnorePatterns](https://stackoverflow.com/a/49676319) to my `package.json`.
+
+That sorted I tried to adapt what had been done previously had but couldn't assign any mock values. With none of the suggestions I found via Google working it was back to the LLM:
+
+```
+import { useGetStockListQuery } from '../../app/apiSlice';
+
+// Mock the entire API slice
+jest.mock('../../app/apiSlice', () => ({
+  ...jest.requireActual('../../app/apiSlice'),
+  useGetStockListQuery: jest.fn(),
+}));
+
+const mockUseGetStockListQuery = useGetStockListQuery as jest.MockedFunction<typeof useGetStockListQuery>;
+
+describe('StockList', () => {
+  beforeEach(() => {
+    // Default successful mock
+    mockUseGetStockListQuery.mockReturnValue({
+      data: stockListApiOutput,
+      isLoading: false,
+      isSuccess: true,
+      isError: false,
+      error: undefined,
+    } as any);
+  });
+  ...
+});
+```
+
+What I learnt:
+1. For this I should use `mockReturnValue` rather then `mockResolvedValue` as the hook return values, not promises
+2. I should probably look in to using mock service workers instead
+
+## 2025-12-05
+
+Unsuprisingly the above needed further modificaion for the `useLazyQuery` version of the generated hook, viz:
+
+```
+describe('StockChart', () => {
+  let mockTrigger: jest.Mock;
+  let mockResult: any;
+
+  beforeEach(() => {
+    // Create mock trigger function
+    mockTrigger = jest.fn().mockImplementation(() => ({
+      unwrap: jest.fn().mockResolvedValue({
+        ticker: 'A',
+        results: [A]
+      })
+    }));
+
+    // Create mock result object
+    mockResult = {
+      data: undefined,
+      isLoading: false,
+      isSuccess: false,
+      isError: false,
+      isUninitialized: true,
+      error: undefined,
+    };
+
+    // Mock returns tuple: [trigger, result]
+    mockUseLazyGetStockDataQuery.mockReturnValue([mockTrigger, mockResult]);
+  });
+  ...
+});```
+
+A helper function was also suggested but it resulted in various tests blowing up so I gave up on that as a bad job.
+
+There are two lines which the coverage reports says are untested:
+1. `StockChart.tsx:37` - this is the error handling. I have tried to test this but so far unsuccessfully so will ask further.
+2. `apiSlice.ts:25` - which is `query: (params) => ()` but I can't see why since the trigger is being mocked? Another question to ask.
+
+Answers:
+1. Firstly, with help, I did away logging the error to the console (which avoided some unnecessary logic to spy on the console) and shifted to displaying it to screen. I couldn't work out how to within what I already had, except for the horrible option of trying to mutate the `result` object, and didn't think about using a new piece of component state. Blame a bain fade, tiredness, code blindness or general stupidity. Once that was done and I'd been reminded of Jest's rejection methods the necessary tests ame easily enough.
+
+2. Claude said this is because I'm mocking the hook so this piece of configuration is not touched. It also said not to bother wasting my time with it here, pointing out that i'd be better off dealing with it via integration testing and mock service workers - which I think have to be the next item on the agenda.

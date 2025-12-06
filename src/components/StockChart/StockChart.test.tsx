@@ -1,11 +1,17 @@
-import StockChart from './StockChart';
+import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
+import { useLazyGetStockDataQuery } from 'app/apiSlice';
 import { priceOptionUpdated } from '../PriceOptions/priceOptionsSlice';
 import { datesUpdated } from '../DateSelector/dateSelectorSlice';
-import { selectedStocksUpdated, initialState as stockListInitialState } from '../StockList/stockListSlice';
-import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
+import { selectedStocksUpdated } from '../StockList/stockListSlice';
+import StockChart from './StockChart';
 import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from '../../constants';
-import * as utilities from '../../utilities';
-import { A, A_DATE_RANGE, AA, AAM } from '../../mocks/Stocks';
+import { A, A_DATE_RANGE, AA, AAM, stockDataApiOutput } from '../../mocks/Stocks';
+
+// Mock the entire API slice
+jest.mock('../../app/apiSlice', () => ({
+  ...jest.requireActual('../../app/apiSlice'),
+  useLazyGetStockDataQuery: jest.fn(),
+}));
 
 // Mock Highcharts
 jest.mock("highcharts", () => ({}));
@@ -13,9 +19,38 @@ jest.mock("highcharts-react-official", () => ({
   HighchartsReact: () => null,
 }));
 
+const mockUseLazyGetStockDataQuery = useLazyGetStockDataQuery as jest.MockedFunction<typeof useLazyGetStockDataQuery>;
+
 describe('StockChart', () => {
+  let mockTrigger: jest.Mock;
+  let mockResult: any;
+
   beforeEach(() => {
-    jest.spyOn(utilities, 'dataFetch').mockResolvedValue({ ticker: 'A', results: A });
+    // Create mock trigger function
+    mockTrigger = jest.fn().mockImplementation(() => ({
+      unwrap: jest.fn().mockResolvedValue({
+        ticker: 'A',
+        results: [A]
+      })
+    }));
+
+    // Create mock result object
+    mockResult = {
+      data: undefined,
+      isLoading: false,
+      isSuccess: false,
+      isError: false,
+      isUninitialized: true,
+      error: undefined,
+    };
+
+    const mockLastPromise = {
+      lastArg: mockResult
+    };
+
+    // Mock returns tuple: [trigger, result, mockLastPromise]
+    // Only adding mockLastPromise as TS complained when it was left out
+    mockUseLazyGetStockDataQuery.mockReturnValue([mockTrigger, mockResult, mockLastPromise]);
   });
 
   afterEach(() => {
@@ -24,9 +59,14 @@ describe('StockChart', () => {
 
   test('it renders without crashing', () => {
     render(<StockChart />);
+    expect(screen.getByText('Awaiting data')).toBeInTheDocument();
+    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
   });
 
   test('it shows a loading message', () => {
+    mockResult.isLoading = true;
+    mockResult.isUninitialized = false;
+
     render(<StockChart />);
 
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
@@ -34,56 +74,133 @@ describe('StockChart', () => {
   });
 
   test('it should display an error message when data fetch fails with Error', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce(new Error('Network error'));
+    mockResult.isError = true;
+    mockResult.isUninitialized = false;
+    mockResult.error = new Error('Network error');
 
-    render(<StockChart />, {
-      preloadedState: {
-        stocks: {
-          ...stockListInitialState,
-          selectedStocks: ['A']
-        }
-      }
-    });
+    render(<StockChart />);
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-
-    expect(screen.getByText('Network error')).toBeInTheDocument();
+    expect(screen.getByText('Error: Network error')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
   });
 
-  test('it should display a generic error message when fetch fails with non-Error', async () => {
-    jest.spyOn(utilities, 'dataFetch').mockRejectedValueOnce({ name: 'CustomError' });
+  test('it calls trigger function when stock is selected', async () => {
+    const { store } = render(<StockChart />);
 
-    render(<StockChart />, {
-      preloadedState: {
-        stocks: {
-          ...stockListInitialState,
-          selectedStocks: ['A']
-        }
-      }
+    act(() => store.dispatch(selectedStocksUpdated('A')));
+
+    await waitFor(() => {
+      expect(mockTrigger).toHaveBeenCalledWith({
+        ticker: 'A',
+        from: expect.any(String),
+        to: expect.any(String)
+      });
+    });
+  });
+
+  test('it handles successful data fetch via unwrap', async () => {
+    const mockData = {
+      ticker: 'A',
+      results: [A]
+    };
+
+    const mockUnwrap = jest.fn().mockResolvedValue(mockData);
+    mockTrigger.mockImplementation(() => ({
+      unwrap: mockUnwrap
+    }));
+
+    const { store } = render(<StockChart />);
+
+    // Trigger selection
+    act(() => store.dispatch(selectedStocksUpdated('A')));
+
+    await waitFor(() => {
+      expect(mockUnwrap).toHaveBeenCalled();
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
+    // Verify chart data was updated
+    await waitFor(() => {
+      expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    });
+  });
 
-    expect(screen.getByText('There was an error. Please refer to the console.')).toBeInTheDocument();
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+  test('it handles an unsuccessful data fetch via unwrap', async () => {
+    const mockUnwrap = jest.fn().mockRejectedValue(new Error('API Error'));
+    mockTrigger.mockImplementation(() => ({
+      unwrap: mockUnwrap
+    }));
+
+    const { store } = render(<StockChart />);
+
+    // Trigger selection
+    act(() => store.dispatch(selectedStocksUpdated('A')));
+
+    await waitFor(() => {
+      expect(mockUnwrap).toHaveBeenCalled();
+    });
+
+    expect(screen.getByText(/Failed to load A/)).toBeInTheDocument();
+  });
+
+  test('it handles an unsuccessful data fetch via unwrap wdth no error message', async () => {
+    const mockUnwrap = jest.fn().mockRejectedValue('');
+    mockTrigger.mockImplementation(() => ({
+      unwrap: mockUnwrap
+    }));
+
+    const { store } = render(<StockChart />);
+
+    // Trigger selection
+    act(() => store.dispatch(selectedStocksUpdated('A')));
+
+    await waitFor(() => {
+      expect(mockUnwrap).toHaveBeenCalled();
+    });
+
+    expect(screen.getByText(/Failed to load A/)).toBeInTheDocument();
+  });
+
+  test('it shows chart for successful tickers and error for failed ones', async () => {
+    mockTrigger
+      .mockImplementationOnce(() => ({
+        unwrap: jest.fn().mockResolvedValue({ ticker: 'A', results: [A] })
+      }))
+      .mockImplementationOnce(() => ({
+        unwrap: jest.fn().mockRejectedValue(new Error('Network error'))
+      }));
+
+    const { store } = render(<StockChart />);
+
+    act(() => store.dispatch(selectedStocksUpdated('A')));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    });
+
+    act(() => store.dispatch(selectedStocksUpdated('AA')));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to load AA/i)).toBeInTheDocument();
+    });
+
+    // Chart should still be visible for successful ticker
+    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
   });
 
   test('it should display a chart when there is a ticker', async () => {
+    mockResult.isSuccess = true;
+    mockResult.isUninitialized = false;
+
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A']
         }
       }
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-
     await waitFor(() => {
-      const chart = screen.queryByTestId('stockchart');
-      expect(chart).toBeInTheDocument();
+      expect(screen.getByTestId('stockchart')).toBeInTheDocument();
     });
   });
 
@@ -91,7 +208,6 @@ describe('StockChart', () => {
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A', 'AA', 'AAM']
         }
       }
@@ -117,7 +233,6 @@ describe('StockChart', () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A']
         }
       }
@@ -126,8 +241,7 @@ describe('StockChart', () => {
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
 
     await waitFor(() => {
-      const chart = screen.queryByTestId('stockchart');
-      expect(chart).toBeInTheDocument();
+      expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
     });
 
     act(() => store.dispatch(selectedStocksUpdated('A')));
@@ -156,62 +270,52 @@ describe('StockChart', () => {
   });
 
   test('it should update the chart when tickers are added', async () => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ ticker: 'A', results: A })
-      .mockResolvedValueOnce({ ticker: 'AA', results: AA })
-      .mockResolvedValueOnce({ ticker: 'AAM', results: AAM });
-
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A']
         }
       }
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockTrigger).toHaveBeenCalledWith({
+        ticker: 'A',
+        from: expect.any(String),
+        to: expect.any(String)
+      });
+    });
 
-    // Should have been called once initially
-    expect(dataFetchSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
 
     act(() => store.dispatch(selectedStocksUpdated('AA')));
 
-    // Should call dataFetch again for the new ticker
-    await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));
-
-    // Verify it was called with new ticker
-    expect(dataFetchSpy).toHaveBeenLastCalledWith(
-      expect.stringContaining('AA'),
-      expect.any(Object)
-    );
+    await waitFor(() => {
+      expect(mockTrigger).toHaveBeenCalledWith({
+        ticker: 'AA',
+        from: expect.any(String),
+        to: expect.any(String)
+      });
+    });
 
     act(() => store.dispatch(selectedStocksUpdated('AAM')));
 
-    // Should call dataFetch again for the new ticker
-    await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(3));
-
-    // Verify it was called with new ticker
-    expect(dataFetchSpy).toHaveBeenLastCalledWith(
-      expect.stringContaining('AAM'),
-      expect.any(Object)
-    );
+    await waitFor(() => {
+      expect(mockTrigger).toHaveBeenCalledWith({
+        ticker: 'AAM',
+        from: expect.any(String),
+        to: expect.any(String)
+      });
+    });
 
     // Chart should still be visible
     expect(screen.getByTestId('stockchart')).toBeInTheDocument();
   });
 
   test('it should update the chart when tickers are removed', async () => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ ticker: 'A', results: A })
-      .mockResolvedValueOnce({ ticker: 'AA', results: AA })
-      .mockResolvedValueOnce({ ticker: 'AAM', results: AAM });
-
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A', 'AA', 'AAM']
         }
       }
@@ -235,7 +339,6 @@ describe('StockChart', () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A']
         }
       }
@@ -245,7 +348,7 @@ describe('StockChart', () => {
 
     await waitFor(() => {
       const chart = screen.queryByTestId('stockchart');
-      expect(chart).toBeInTheDocument();
+      expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
     });
 
     act(() => store.dispatch(priceOptionUpdated('High')));
@@ -256,14 +359,9 @@ describe('StockChart', () => {
   });
 
   test('it should reload data when date range changes', async () => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ ticker: 'A', results: A })
-      .mockResolvedValueOnce({ ticker: 'A', results: A_DATE_RANGE })
-
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A']
         }
       }
@@ -271,30 +369,21 @@ describe('StockChart', () => {
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
 
-    // Should have been called once initially
-    expect(dataFetchSpy).toHaveBeenCalledTimes(1);
-
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
 
-    // Should call dataFetch again for the new date range
-    await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(2));
-
-    // Verify it was called with new date
-    expect(dataFetchSpy).toHaveBeenLastCalledWith(
-      expect.stringContaining(DATE_MIDDLE),
-      expect.any(Object)
-    );
+    await waitFor(() => {
+      expect(mockTrigger).toHaveBeenCalledWith({
+        ticker: 'A',
+        from: DATE_MIN,
+        to: DATE_MIDDLE
+      });
+    });
   });
 
   test('it should update all existing tickers when date range changes', async () => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch')
-      .mockResolvedValueOnce({ ticker: 'A', results: A })
-      .mockResolvedValueOnce({ ticker: 'A', results: AA });
-
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          ...stockListInitialState,
           selectedStocks: ['A', 'AA']
         }
       }
@@ -302,19 +391,24 @@ describe('StockChart', () => {
 
     await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
     expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
-    expect(dataFetchSpy).toHaveBeenCalledTimes(2);
 
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
-    await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(4));
 
-    expect(dataFetchSpy).toHaveBeenCalledWith(
-      expect.stringContaining('A/'),
-      expect.any(Object)
-    );
-    expect(dataFetchSpy).toHaveBeenCalledWith(
-      expect.stringContaining('AA/'),
-      expect.any(Object)
-    );
+    await waitFor(() => {
+      expect(mockTrigger).toHaveBeenCalledWith({
+        ticker: 'A',
+        from: DATE_MIN,
+        to: DATE_MIDDLE
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockTrigger).toHaveBeenCalledWith({
+        ticker: 'AA',
+        from: DATE_MIN,
+        to: DATE_MIDDLE
+      });
+    });
 
     // Flush all pending promises and state updates
     await act(async () => {
@@ -323,21 +417,12 @@ describe('StockChart', () => {
   });
 
   test('it should do nothing when date range changes if there are no tickers', async () => {
-    const dataFetchSpy = jest.spyOn(utilities, 'dataFetch');
-
     const { store } = render(<StockChart />);
 
-    // Should not be called as there are no tickers
-    expect(dataFetchSpy).toHaveBeenCalledTimes(0);
-
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIDDLE, toDate: DATE_MAX })));
-
-    // Still shouldn't be called
-    await waitFor(() => expect(dataFetchSpy).toHaveBeenCalledTimes(0));
 
     // Verify that the chart isn't visible
     expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
     expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
   });
-
 });

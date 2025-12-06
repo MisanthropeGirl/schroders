@@ -1,24 +1,25 @@
-import { ChangeEvent, useEffect } from 'react';
+import { ChangeEvent } from 'react';
 import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
+import { useGetStockListQuery } from '../../app/apiSlice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { fetchStocks, selectedStocksUpdated, selectStocksSelected, selectStocksError, selectStocksStatus, selectStockById, selectStockIds } from './stockListSlice';
+import { selectStocksSelected, selectedStocksUpdated } from './stockListSlice';
 
 interface StockListExceptProps {
-  stockId: string;
+  stock: Stock;
 }
 
 function StockList() {
   const dispatch = useAppDispatch();
-  const stockIds = useAppSelector(selectStockIds)
-  const selectedStocks = useAppSelector(selectStocksSelected);
-  const status = useAppSelector(selectStocksStatus);
-  const error = useAppSelector(selectStocksError);
+  const {
+    isLoading,
+    isError,
+    isSuccess,
+    data: stockListResponse = {} as StockListApiResponse,
+    error
+  } = useGetStockListQuery();
 
-  useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchStocks());
-    }
-  }, [status, dispatch])
+  const selectedStocks = useAppSelector(selectStocksSelected);
+  const stockList = isSuccess ? stockListResponse.results : [];
 
   const handleClickEvent = (e: ChangeEvent<HTMLInputElement>): void => {
     const ticker = e.target.value;
@@ -32,16 +33,15 @@ function StockList() {
     }
   };
 
-  if (status === 'rejected') {
-    return (<div>{error}</div>);
+  if (isError) {
+    return (<div>{error.toString()}</div>);
   }
 
-  if (status === 'idle' || status === 'pending') {
+  if (isLoading) {
     return <div>Loading table</div>;
   }
 
-  function StockListExcept({ stockId }: StockListExceptProps) {
-    const stock = useAppSelector(state => selectStockById(state, stockId));
+  function StockListExcept({ stock }: StockListExceptProps) {
     return (
       <TableRow key={stock.ticker} hover>
         <TableCell>
@@ -77,8 +77,8 @@ function StockList() {
         </TableRow>
       </TableHead>
       <TableBody>
-        {stockIds.map(stockId => (
-          <StockListExcept key={stockId} stockId={stockId} />
+        {stockList.map(stock => (
+          <StockListExcept key={stock.ticker} stock={stock} />
         ))}
       </TableBody>
     </Table>
