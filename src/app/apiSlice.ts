@@ -5,6 +5,7 @@ import { StockChartProps } from "components/StockChart/stockChartSlice";
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: "https://api.polygon.io/" }),
+  keepUnusedDataFor: 3600, // one hour
   endpoints: builder => ({
     getStockList: builder.query<StockListApiResponse, void>({
       query: () => ({
