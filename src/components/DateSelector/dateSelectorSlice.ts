@@ -15,7 +15,7 @@ const dateSelectorSlice = createSlice({
   name: "dates",
   initialState,
   reducers: {
-    datesUpdated: (state, action: PayloadAction<{fromDate: string, toDate: string}>) => {
+    datesUpdated: (state, action: PayloadAction<{ fromDate: string; toDate: string }>) => {
       state.fromDate = action.payload.fromDate;
       state.toDate = action.payload.toDate;
     },
@@ -23,7 +23,7 @@ const dateSelectorSlice = createSlice({
   selectors: {
     selectFromDate: optionsState => optionsState.fromDate,
     selectToDate: optionsState => optionsState.toDate,
-  }
+  },
 });
 
 export default dateSelectorSlice.reducer;

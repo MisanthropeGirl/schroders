@@ -1,19 +1,19 @@
-import userEvent from '@testing-library/user-event';
-import { fireEvent, render, screen, waitFor } from '../../test-utils';
-import { useGetStockListQuery } from '../../app/apiSlice';
-import { initialState } from './stockListSlice';
-import StockList from './StockList';
-import { stockListApiOutput, stockListApiOutputEmpty, stockList } from '../../mocks/StockList';
+import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen, waitFor } from "../../test-utils";
+import { useGetStockListQuery } from "../../app/apiSlice";
+import { stockListApiOutput, stockListApiOutputEmpty, stockList } from "../../mocks/StockList";
+import { initialState } from "./stockListSlice";
+import StockList from "./StockList";
 
 // Mock the entire API slice
-jest.mock('../../app/apiSlice', () => ({
-  ...jest.requireActual('../../app/apiSlice'),
+jest.mock("../../app/apiSlice", () => ({
+  ...jest.requireActual("../../app/apiSlice"),
   useGetStockListQuery: jest.fn(),
 }));
 
 const mockUseGetStockListQuery = useGetStockListQuery as jest.MockedFunction<typeof useGetStockListQuery>;
 
-describe('StockList', () => {
+describe("StockList", () => {
   beforeEach(() => {
     // Default successful mock
     mockUseGetStockListQuery.mockReturnValue({
@@ -29,15 +29,15 @@ describe('StockList', () => {
     jest.restoreAllMocks();
   });
 
-  test('it renders without crashing', async () => {
+  test("it renders without crashing", async () => {
     render(<StockList />);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('stocklist')).toBeInTheDocument();
+      expect(screen.queryByTestId("stocklist")).toBeInTheDocument();
     });
   });
 
-  test('it should display loading state initially', () => {
+  test("it should display loading state initially", () => {
     mockUseGetStockListQuery.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -48,22 +48,22 @@ describe('StockList', () => {
 
     render(<StockList />);
 
-    expect(screen.getByText('Loading table')).toBeInTheDocument();
-    expect(screen.queryByTestId('stocklist')).not.toBeInTheDocument();
+    expect(screen.getByText("Loading table")).toBeInTheDocument();
+    expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
   });
 
-  test('it should display a table when the data fetch succeeds', async () => {
+  test("it should display a table when the data fetch succeeds", async () => {
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
-    const table: HTMLTableElement = screen.getByTestId('stocklist');
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
 
     expect(table.tBodies[0].rows.length).toEqual(stockList.length);
-    expect(table.getElementsByTagName('input').length).toEqual(stockList.length);
+    expect(table.getElementsByTagName("input").length).toEqual(stockList.length);
   });
 
-  test('it should display an empty table when the data fetch succeeds but there is an empty array', async () => {
+  test("it should display an empty table when the data fetch succeeds but there is an empty array", async () => {
     mockUseGetStockListQuery.mockReturnValue({
       data: stockListApiOutputEmpty,
       isLoading: false,
@@ -74,20 +74,18 @@ describe('StockList', () => {
 
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
-    const table: HTMLTableElement = screen.getByTestId('stocklist');
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
 
     expect(table.tBodies[0].rows.length).toEqual(0);
-    expect(table.getElementsByTagName('input').length).toEqual(0);
+    expect(table.getElementsByTagName("input").length).toEqual(0);
   });
 
-  test('handles data with missing currency field gracefully', async () => {
+  test("handles data with missing currency field gracefully", async () => {
     const dataWithMissingCurrency = {
       ...stockListApiOutput,
-      results: [
-        { ...stockList[0], currency_name: undefined }
-      ]
+      results: [{ ...stockList[0], currency_name: undefined }],
     };
 
     mockUseGetStockListQuery.mockReturnValue({
@@ -100,19 +98,19 @@ describe('StockList', () => {
 
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
-    expect(screen.getByTestId('stocklist')).toBeInTheDocument();
+    expect(screen.getByTestId("stocklist")).toBeInTheDocument();
   });
 
-  test('allows selecting up to 3 tickers and disables remaining checkboxes', async () => {
+  test("allows selecting up to 3 tickers and disables remaining checkboxes", async () => {
     const user = userEvent.setup();
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
-    const table: HTMLTableElement = screen.getByTestId('stocklist');
-    const checkboxes = table.getElementsByTagName('input');
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
+    const checkboxes = table.getElementsByTagName("input");
 
     await user.click(checkboxes[0]);
     expect(checkboxes[1]).toBeEnabled();
@@ -127,14 +125,14 @@ describe('StockList', () => {
     expect(checkboxes[3]).toBeEnabled();
   });
 
-  test('it should be possible to uncheck a selected ticker', async () => {
+  test("it should be possible to uncheck a selected ticker", async () => {
     const user = userEvent.setup();
     const { store } = render(<StockList />);
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
-    const table: HTMLTableElement = screen.getByTestId('stocklist');
-    const checkboxes = table.getElementsByTagName('input');
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
+    const checkboxes = table.getElementsByTagName("input");
 
     // Check then uncheck
     await user.click(checkboxes[0]);
@@ -144,31 +142,31 @@ describe('StockList', () => {
     expect(store.getState().stocks.selectedStocks).not.toContain(stockList[0].ticker);
   });
 
-  test('checkboxes have accessible labels', async () => {
+  test("checkboxes have accessible labels", async () => {
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
     // Each checkbox should be associated with the ticker
-    const firstCheckbox = screen.getByRole('checkbox', { name: 'Select A' });
+    const firstCheckbox = screen.getByRole("checkbox", { name: "Select A" });
     expect(firstCheckbox).toBeInTheDocument();
   });
 
-  test('it should not add a fourth ticker when clicking a disabled checkbox', async () => {
+  test("it should not add a fourth ticker when clicking a disabled checkbox", async () => {
     const user = userEvent.setup();
     const { store } = render(<StockList />, {
       preloadedState: {
         stocks: {
           ...initialState,
-          selectedStocks: ['A', 'AA', 'AAM']
-        }
-      }
+          selectedStocks: ["A", "AA", "AAM"],
+        },
+      },
     });
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
-    const table: HTMLTableElement = screen.getByTestId('stocklist');
-    const checkboxes = table.getElementsByTagName('input');
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
+    const checkboxes = table.getElementsByTagName("input");
 
     expect(store.getState().stocks.selectedStocks).toHaveLength(3);
     expect(checkboxes[3]).toBeDisabled();
@@ -184,20 +182,20 @@ describe('StockList', () => {
     expect(store.getState().stocks.selectedStocks).toHaveLength(3);
   });
 
-  test('it defensively ignores attempts to add a fourth ticker even if UI is bypassed', async () => {
+  test("it defensively ignores attempts to add a fourth ticker even if UI is bypassed", async () => {
     const { store } = render(<StockList />, {
       preloadedState: {
         stocks: {
           ...initialState,
-          selectedStocks: ['A', 'AA', 'AAM']
-        }
-      }
+          selectedStocks: ["A", "AA", "AAM"],
+        },
+      },
     });
 
-    await waitFor(() => screen.getByTestId('stocklist'));
+    await waitFor(() => screen.getByTestId("stocklist"));
 
-    const table: HTMLTableElement = screen.getByTestId('stocklist');
-    const checkboxes = table.getElementsByTagName('input');
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
+    const checkboxes = table.getElementsByTagName("input");
 
     expect(store.getState().stocks.selectedStocks).toHaveLength(3);
 
@@ -211,18 +209,18 @@ describe('StockList', () => {
     expect(store.getState().stocks.selectedStocks).not.toContain(stockList[3].ticker);
   });
 
-  test('it should display an error message when data fetch fails with Error', async () => {
+  test("it should display an error message when data fetch fails with Error", async () => {
     mockUseGetStockListQuery.mockReturnValue({
       data: undefined,
       isLoading: false,
       isSuccess: false,
       isError: true,
-      error: new Error('Network error'),
+      error: new Error("Network error"),
     } as any);
 
     render(<StockList />);
 
-    expect(screen.getByText('Error: Network error')).toBeInTheDocument();
-    expect(screen.queryByTestId('stocklist')).not.toBeInTheDocument();
+    expect(screen.getByText("Error: Network error")).toBeInTheDocument();
+    expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
   });
 });

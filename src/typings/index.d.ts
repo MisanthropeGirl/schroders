@@ -25,8 +25,8 @@ interface Stock {
   currency_name?: string;
   delisted_utc?: string;
   last_updated_utc?: string;
-  locale: 'us' | 'global';
-  market: 'stocks' | 'crypto' | 'fx' | 'otc' | 'indices';
+  locale: "us" | "global";
+  market: "stocks" | "crypto" | "fx" | "otc" | "indices";
   name: string;
   primary_exchange?: string;
   share_class_figi?: string;

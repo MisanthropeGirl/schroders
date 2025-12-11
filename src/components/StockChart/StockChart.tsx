@@ -1,23 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import * as Highcharts from 'highcharts';
-import { HighchartsReact } from 'highcharts-react-official';
+import * as Highcharts from "highcharts";
+import { HighchartsReact } from "highcharts-react-official";
 import { useLazyGetStockDataQuery } from "../../app/apiSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { PRICE_SERIES_CODES, chartPriceOptions, createInitialChartDataState } from "../../constants";
 import { removeTransformedDataByTicker, dataTransform } from "../../utilities";
-import { selectPriceOption } from "../PriceOptions/priceOptionsSlice";
 import { selectFromDate, selectToDate } from "../DateSelector/dateSelectorSlice";
-import { selectChartTickers, tickersUpdated } from "./stockChartSlice";
+import { selectPriceOption } from "../PriceOptions/priceOptionsSlice";
 import { selectStocksSelected } from "../StockList/stockListSlice";
-import './StockChart.css';
+import { selectChartTickers, tickersUpdated } from "./stockChartSlice";
+import "./StockChart.css";
 
 function StockChart() {
   const dispatch = useAppDispatch();
   const [getStockData, result] = useLazyGetStockDataQuery();
 
-  const [chartData, setChartData] = useState<Record<string, TransformedData[]>>(
-    createInitialChartDataState()
-  );
+  const [chartData, setChartData] = useState<Record<string, TransformedData[]>>(createInitialChartDataState());
   const [fetchErrors, setFetchErrors] = useState<Record<string, string>>({});
 
   const chartTickers = useAppSelector(selectChartTickers);
@@ -40,12 +38,11 @@ function StockChart() {
         delete updated[ticker];
         return updated;
       });
-    }
-    catch (error) {
+    } catch (error) {
       // Store the error for this ticker
       setFetchErrors(prev => ({
         ...prev,
-        [ticker]: error instanceof Error ? error.message : 'Failed to fetch data'
+        [ticker]: error instanceof Error ? error.message : "Failed to fetch data",
       }));
     }
   };
@@ -54,18 +51,15 @@ function StockChart() {
     setChartData(prev => {
       const updated = { ...prev };
       removeTransformedDataByTicker(updated, ticker);
-      
+
       chartPriceOptions.forEach(option => {
         updated[option].push({
-          type: 'line',
+          type: "line",
           name: ticker,
-          data: dataTransform(
-            results,
-            PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES]
-          )
+          data: dataTransform(results, PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES]),
         });
       });
-      
+
       return updated;
     });
   };
@@ -77,10 +71,10 @@ function StockChart() {
     selectedStocks
       .filter(ticker => !existingSet.has(ticker))
       .forEach(ticker => {
-          loadData(ticker).then(() => dispatch(tickersUpdated(ticker)))
+        loadData(ticker).then(() => dispatch(tickersUpdated(ticker)));
       });
 
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStocks]);
 
   // Reload data when dates change
@@ -133,36 +127,36 @@ function StockChart() {
 
   const chartOptions: Highcharts.Options = {
     chart: {
-      type: 'line',
+      type: "line",
     },
     title: {
-      text: `${priceOption} Price over time`
+      text: `${priceOption} Price over time`,
     },
     xAxis: {
-      type: 'datetime'
+      type: "datetime",
     },
     yAxis: {
       title: {
-        text: 'Price (USD)'
-      }
+        text: "Price (USD)",
+      },
     },
     legend: {
-      enabled: true
+      enabled: true,
     },
     plotOptions: {
       series: {
         label: {
-          connectorAllowed: false
+          connectorAllowed: false,
         },
-      }
+      },
     },
     // Gave up trying to fix the typescript issue here and bypassed it
     // @ts-ignore comment
-    series: chartData[priceOption]
+    series: chartData[priceOption],
   };
 
   return (
-    <div className="chart" data-testid='stockchart'>
+    <div className="chart" data-testid="stockchart">
       {Object.keys(fetchErrors).length > 0 && (
         <div className="chart-errors">
           {Object.entries(fetchErrors).map(([ticker, error]) => (
@@ -174,14 +168,10 @@ function StockChart() {
       )}
 
       {chartTickers.length > 0 && (
-        <HighchartsReact
-          highcharts={Highcharts}
-          options={chartOptions}
-          ref={chartComponentRef}
-        />
+        <HighchartsReact highcharts={Highcharts} options={chartOptions} ref={chartComponentRef} />
       )}
     </div>
-  )
+  );
 }
 
 export default StockChart;

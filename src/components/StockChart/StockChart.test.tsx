@@ -1,15 +1,15 @@
-import { act, render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
-import { useLazyGetStockDataQuery } from 'app/apiSlice';
-import { priceOptionUpdated } from '../PriceOptions/priceOptionsSlice';
-import { datesUpdated } from '../DateSelector/dateSelectorSlice';
-import { selectedStocksUpdated } from '../StockList/stockListSlice';
-import StockChart from './StockChart';
-import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from '../../constants';
-import { A, A_DATE_RANGE, AA, AAM, stockDataApiOutput } from '../../mocks/Stocks';
+import { act, render, screen, waitFor, waitForElementToBeRemoved } from "../../test-utils";
+import { useLazyGetStockDataQuery } from "../../app/apiSlice";
+import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from "../../constants";
+import { A } from "../../mocks/Stocks";
+import { datesUpdated } from "../DateSelector/dateSelectorSlice";
+import { priceOptionUpdated } from "../PriceOptions/priceOptionsSlice";
+import { selectedStocksUpdated } from "../StockList/stockListSlice";
+import StockChart from "./StockChart";
 
 // Mock the entire API slice
-jest.mock('../../app/apiSlice', () => ({
-  ...jest.requireActual('../../app/apiSlice'),
+jest.mock("../../app/apiSlice", () => ({
+  ...jest.requireActual("../../app/apiSlice"),
   useLazyGetStockDataQuery: jest.fn(),
 }));
 
@@ -21,7 +21,7 @@ jest.mock("highcharts-react-official", () => ({
 
 const mockUseLazyGetStockDataQuery = useLazyGetStockDataQuery as jest.MockedFunction<typeof useLazyGetStockDataQuery>;
 
-describe('StockChart', () => {
+describe("StockChart", () => {
   let mockTrigger: jest.Mock;
   let mockResult: any;
 
@@ -29,9 +29,9 @@ describe('StockChart', () => {
     // Create mock trigger function
     mockTrigger = jest.fn().mockImplementation(() => ({
       unwrap: jest.fn().mockResolvedValue({
-        ticker: 'A',
-        results: [A]
-      })
+        ticker: "A",
+        results: [A],
+      }),
     }));
 
     // Create mock result object
@@ -45,7 +45,7 @@ describe('StockChart', () => {
     };
 
     const mockLastPromise = {
-      lastArg: mockResult
+      lastArg: mockResult,
     };
 
     // Mock returns tuple: [trigger, result, mockLastPromise]
@@ -57,62 +57,62 @@ describe('StockChart', () => {
     jest.restoreAllMocks();
   });
 
-  test('it renders without crashing', () => {
+  test("it renders without crashing", () => {
     render(<StockChart />);
-    expect(screen.getByText('Awaiting data')).toBeInTheDocument();
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+    expect(screen.getByText("Awaiting data")).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
   });
 
-  test('it shows a loading message', () => {
+  test("it shows a loading message", () => {
     mockResult.isLoading = true;
     mockResult.isUninitialized = false;
 
     render(<StockChart />);
 
-    expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+    expect(screen.queryByText("Awaiting data")).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
   });
 
-  test('it should display an error message when data fetch fails with Error', async () => {
+  test("it should display an error message when data fetch fails with Error", async () => {
     mockResult.isError = true;
     mockResult.isUninitialized = false;
-    mockResult.error = new Error('Network error');
+    mockResult.error = new Error("Network error");
 
     render(<StockChart />);
 
-    expect(screen.getByText('Error: Network error')).toBeInTheDocument();
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+    expect(screen.getByText("Error: Network error")).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
   });
 
-  test('it calls trigger function when stock is selected', async () => {
+  test("it calls trigger function when stock is selected", async () => {
     const { store } = render(<StockChart />);
 
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
     await waitFor(() => {
       expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: 'A',
+        ticker: "A",
         from: expect.any(String),
-        to: expect.any(String)
+        to: expect.any(String),
       });
     });
   });
 
-  test('it handles successful data fetch via unwrap', async () => {
+  test("it handles successful data fetch via unwrap", async () => {
     const mockData = {
-      ticker: 'A',
-      results: [A]
+      ticker: "A",
+      results: [A],
     };
 
     const mockUnwrap = jest.fn().mockResolvedValue(mockData);
     mockTrigger.mockImplementation(() => ({
-      unwrap: mockUnwrap
+      unwrap: mockUnwrap,
     }));
 
     const { store } = render(<StockChart />);
 
     // Trigger selection
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
     await waitFor(() => {
       expect(mockUnwrap).toHaveBeenCalled();
@@ -120,20 +120,20 @@ describe('StockChart', () => {
 
     // Verify chart data was updated
     await waitFor(() => {
-      expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+      expect(screen.getByTestId("stockchart")).toBeInTheDocument();
     });
   });
 
-  test('it handles an unsuccessful data fetch via unwrap', async () => {
-    const mockUnwrap = jest.fn().mockRejectedValue(new Error('API Error'));
+  test("it handles an unsuccessful data fetch via unwrap", async () => {
+    const mockUnwrap = jest.fn().mockRejectedValue(new Error("API Error"));
     mockTrigger.mockImplementation(() => ({
-      unwrap: mockUnwrap
+      unwrap: mockUnwrap,
     }));
 
     const { store } = render(<StockChart />);
 
     // Trigger selection
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
     await waitFor(() => {
       expect(mockUnwrap).toHaveBeenCalled();
@@ -142,16 +142,16 @@ describe('StockChart', () => {
     expect(screen.getByText(/Failed to load A/)).toBeInTheDocument();
   });
 
-  test('it handles an unsuccessful data fetch via unwrap wdth no error message', async () => {
-    const mockUnwrap = jest.fn().mockRejectedValue('');
+  test("it handles an unsuccessful data fetch via unwrap wdth no error message", async () => {
+    const mockUnwrap = jest.fn().mockRejectedValue("");
     mockTrigger.mockImplementation(() => ({
-      unwrap: mockUnwrap
+      unwrap: mockUnwrap,
     }));
 
     const { store } = render(<StockChart />);
 
     // Trigger selection
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
     await waitFor(() => {
       expect(mockUnwrap).toHaveBeenCalled();
@@ -160,253 +160,253 @@ describe('StockChart', () => {
     expect(screen.getByText(/Failed to load A/)).toBeInTheDocument();
   });
 
-  test('it shows chart for successful tickers and error for failed ones', async () => {
+  test("it shows chart for successful tickers and error for failed ones", async () => {
     mockTrigger
       .mockImplementationOnce(() => ({
-        unwrap: jest.fn().mockResolvedValue({ ticker: 'A', results: [A] })
+        unwrap: jest.fn().mockResolvedValue({ ticker: "A", results: [A] }),
       }))
       .mockImplementationOnce(() => ({
-        unwrap: jest.fn().mockRejectedValue(new Error('Network error'))
+        unwrap: jest.fn().mockRejectedValue(new Error("Network error")),
       }));
 
     const { store } = render(<StockChart />);
 
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
     await waitFor(() => {
-      expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+      expect(screen.getByTestId("stockchart")).toBeInTheDocument();
     });
 
-    act(() => store.dispatch(selectedStocksUpdated('AA')));
+    act(() => store.dispatch(selectedStocksUpdated("AA")));
 
     await waitFor(() => {
       expect(screen.getByText(/Failed to load AA/i)).toBeInTheDocument();
     });
 
     // Chart should still be visible for successful ticker
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
   });
 
-  test('it should display a chart when there is a ticker', async () => {
+  test("it should display a chart when there is a ticker", async () => {
     mockResult.isSuccess = true;
     mockResult.isUninitialized = false;
 
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A']
-        }
-      }
+          selectedStocks: ["A"],
+        },
+      },
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+      expect(screen.getByTestId("stockchart")).toBeInTheDocument();
     });
   });
 
-  test('it should display chart when there are multiple tickers', async () => {
+  test("it should display chart when there are multiple tickers", async () => {
     render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A', 'AA', 'AAM']
-        }
-      }
+          selectedStocks: ["A", "AA", "AAM"],
+        },
+      },
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
   });
 
-  test('it should show the chart when a ticker is selected', async () => {
+  test("it should show the chart when a ticker is selected", async () => {
     const { store } = render(<StockChart />);
 
-    expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+    expect(screen.queryByText("Awaiting data")).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
 
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-    expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
+    expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
   });
 
-  test('it should remove the chart when the ticker array is empty', async () => {
+  test("it should remove the chart when the ticker array is empty", async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A']
-        }
-      }
+          selectedStocks: ["A"],
+        },
+      },
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
 
     await waitFor(() => {
-      expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
+      expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
     });
 
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
     await waitFor(() => {
-      expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
-      expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
-    })
+      expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
+      expect(screen.queryByText("Awaiting data")).toBeInTheDocument();
+    });
   });
 
-  test('it should show the chart when a ticker is selected and remove it when deselected', async () => {
+  test("it should show the chart when a ticker is selected and remove it when deselected", async () => {
     const { store } = render(<StockChart />);
 
-    expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+    expect(screen.queryByText("Awaiting data")).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
 
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-    expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
+    expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
 
-    act(() => store.dispatch(selectedStocksUpdated('A')));
+    act(() => store.dispatch(selectedStocksUpdated("A")));
 
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
-    expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
+    expect(screen.queryByText("Awaiting data")).toBeInTheDocument();
   });
 
-  test('it should update the chart when tickers are added', async () => {
+  test("it should update the chart when tickers are added", async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A']
-        }
-      }
+          selectedStocks: ["A"],
+        },
+      },
     });
 
     await waitFor(() => {
       expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: 'A',
+        ticker: "A",
         from: expect.any(String),
-        to: expect.any(String)
+        to: expect.any(String),
       });
     });
 
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
 
-    act(() => store.dispatch(selectedStocksUpdated('AA')));
+    act(() => store.dispatch(selectedStocksUpdated("AA")));
 
     await waitFor(() => {
       expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: 'AA',
+        ticker: "AA",
         from: expect.any(String),
-        to: expect.any(String)
+        to: expect.any(String),
       });
     });
 
-    act(() => store.dispatch(selectedStocksUpdated('AAM')));
+    act(() => store.dispatch(selectedStocksUpdated("AAM")));
 
     await waitFor(() => {
       expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: 'AAM',
+        ticker: "AAM",
         from: expect.any(String),
-        to: expect.any(String)
+        to: expect.any(String),
       });
     });
 
     // Chart should still be visible
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
   });
 
-  test('it should update the chart when tickers are removed', async () => {
+  test("it should update the chart when tickers are removed", async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A', 'AA', 'AAM']
-        }
-      }
+          selectedStocks: ["A", "AA", "AAM"],
+        },
+      },
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
 
     // remove a ticker
-    act(() => store.dispatch(selectedStocksUpdated('AAM')));
+    act(() => store.dispatch(selectedStocksUpdated("AAM")));
     expect(store.getState().stocks.selectedStocks).toHaveLength(2);
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
 
     // and a second
-    act(() => store.dispatch(selectedStocksUpdated('AA')));
+    act(() => store.dispatch(selectedStocksUpdated("AA")));
     expect(store.getState().stocks.selectedStocks).toHaveLength(1);
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
   });
 
-  test('it should update chart when price option changes', async () => {
+  test("it should update chart when price option changes", async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A']
-        }
-      }
+          selectedStocks: ["A"],
+        },
+      },
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
 
     await waitFor(() => {
-      const chart = screen.queryByTestId('stockchart');
-      expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
+      const chart = screen.queryByTestId("stockchart");
+      expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
     });
 
-    act(() => store.dispatch(priceOptionUpdated('High')));
+    act(() => store.dispatch(priceOptionUpdated("High")));
 
     // Chart should still be visible
     // Tried to test for the change to the chart title but the chart isn't being rendered
-    expect(screen.getByTestId('stockchart')).toBeInTheDocument();
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
   });
 
-  test('it should reload data when date range changes', async () => {
+  test("it should reload data when date range changes", async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A']
-        }
-      }
+          selectedStocks: ["A"],
+        },
+      },
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
 
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
 
     await waitFor(() => {
       expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: 'A',
+        ticker: "A",
         from: DATE_MIN,
-        to: DATE_MIDDLE
+        to: DATE_MIDDLE,
       });
     });
   });
 
-  test('it should update all existing tickers when date range changes', async () => {
+  test("it should update all existing tickers when date range changes", async () => {
     const { store } = render(<StockChart />, {
       preloadedState: {
         stocks: {
-          selectedStocks: ['A', 'AA']
-        }
-      }
+          selectedStocks: ["A", "AA"],
+        },
+      },
     });
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Awaiting data'));
-    expect(screen.queryByTestId('stockchart')).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
+    expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
 
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
 
     await waitFor(() => {
       expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: 'A',
+        ticker: "A",
         from: DATE_MIN,
-        to: DATE_MIDDLE
+        to: DATE_MIDDLE,
       });
     });
 
     await waitFor(() => {
       expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: 'AA',
+        ticker: "AA",
         from: DATE_MIN,
-        to: DATE_MIDDLE
+        to: DATE_MIDDLE,
       });
     });
 
@@ -416,13 +416,13 @@ describe('StockChart', () => {
     });
   });
 
-  test('it should do nothing when date range changes if there are no tickers', async () => {
+  test("it should do nothing when date range changes if there are no tickers", async () => {
     const { store } = render(<StockChart />);
 
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIDDLE, toDate: DATE_MAX })));
 
     // Verify that the chart isn't visible
-    expect(screen.queryByText('Awaiting data')).toBeInTheDocument();
-    expect(screen.queryByTestId('stockchart')).not.toBeInTheDocument();
+    expect(screen.queryByText("Awaiting data")).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
   });
 });

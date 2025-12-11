@@ -1,7 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { chartPriceOptions } from "../../constants";
 
-export type ChartPriceOptions = typeof chartPriceOptions[number];
+export type ChartPriceOptions = (typeof chartPriceOptions)[number];
 
 interface PriceOptionsState {
   priceOption: ChartPriceOptions;
@@ -21,7 +21,7 @@ const priceOptionsSlice = createSlice({
   },
   selectors: {
     selectPriceOption: priceOptionsState => priceOptionsState.priceOption,
-  }
+  },
 });
 
 export default priceOptionsSlice.reducer;

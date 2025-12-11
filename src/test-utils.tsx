@@ -1,8 +1,8 @@
-import React, { ReactElement } from 'react'
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { render, RenderOptions } from '@testing-library/react'
-import { rootReducer, RootState } from './app/store';
+import React, { ReactElement } from "react";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import { render, RenderOptions } from "@testing-library/react";
+import { rootReducer, RootState } from "./app/store";
 
 interface CustomRenderResult extends ReturnType<typeof render> {
   store: ReturnType<typeof configureStore>;
@@ -13,10 +13,12 @@ const customRender = (
   {
     preloadedState,
     ...options
-  }: Omit<RenderOptions, 'wrapper'> & { preloadedState?: Partial<RootState> } = {}
+  }: Omit<RenderOptions, "wrapper"> & {
+    preloadedState?: Partial<RootState>;
+  } = {},
 ) => {
   // Get the initial state from your reducer
-  const initialState = rootReducer(undefined, { type: '@@INIT' });
+  const initialState = rootReducer(undefined, { type: "@@INIT" });
 
   // Merge preloaded state with initial state
   const mergedState = preloadedState
@@ -25,18 +27,18 @@ const customRender = (
 
   const testStore = configureStore({
     reducer: rootReducer,
-    preloadedState: mergedState
+    preloadedState: mergedState,
   });
 
   const ReduxProvider = ({ children }: { children: React.ReactNode }) => {
-    return <Provider store={testStore}>{children}</Provider>
-  }
+    return <Provider store={testStore}>{children}</Provider>;
+  };
 
   return {
     ...render(ui, { wrapper: ReduxProvider, ...options }),
-    store: testStore
-  }
-}
+    store: testStore,
+  };
+};
 
-export * from '@testing-library/react'
-export { customRender as render }
+export * from "@testing-library/react";
+export { customRender as render };

@@ -1,8 +1,13 @@
-import { ChangeEvent } from 'react';
-import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
-import { useGetStockListQuery } from '../../app/apiSlice';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectStocksSelected, selectedStocksUpdated } from './stockListSlice';
+import { ChangeEvent, useMemo } from "react";
+import Checkbox from "@mui/material/Checkbox";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import { useGetStockListQuery } from "../../app/apiSlice";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { selectStocksSelected, selectedStocksUpdated } from "./stockListSlice";
 
 interface StockListExceptProps {
   stock: Stock;
@@ -15,11 +20,19 @@ function StockList() {
     isError,
     isSuccess,
     data: stockListResponse = {} as StockListApiResponse,
-    error
+    error,
   } = useGetStockListQuery();
 
   const selectedStocks = useAppSelector(selectStocksSelected);
   const stockList = isSuccess ? stockListResponse.results : [];
+
+  const sortedStockList = useMemo(() => {
+    const sortedStockList = stockList.slice();
+    sortedStockList.sort((a, b) => {
+      return a.ticker < b.ticker ? -1 : 1;
+    });
+    return sortedStockList;
+  }, [stockList]);
 
   const handleClickEvent = (e: ChangeEvent<HTMLInputElement>): void => {
     const ticker = e.target.value;
@@ -34,7 +47,7 @@ function StockList() {
   };
 
   if (isError) {
-    return (<div>{error.toString()}</div>);
+    return <div>{error.toString()}</div>;
   }
 
   if (isLoading) {
@@ -49,7 +62,7 @@ function StockList() {
             value={stock.ticker}
             checked={selectedStocks.includes(stock.ticker)}
             disabled={selectedStocks.length > 2 && !selectedStocks.includes(stock.ticker)}
-            slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
+            slotProps={{ input: { "aria-label": `Select ${stock.ticker}` } }}
             onChange={handleClickEvent}
           />
         </TableCell>
@@ -65,19 +78,26 @@ function StockList() {
     // In the real world there would probably be fewer rows on show at any time
     // And there'd be pagination
     // And likely some price data
-    <Table size='small' stickyHeader data-testid='stocklist'>
+    <Table size="small" stickyHeader data-testid="stocklist">
       <TableHead>
         <TableRow>
-          <TableCell variant='head'></TableCell>
-          <TableCell align='left' variant='head'>Ticker</TableCell>
-          <TableCell align='left' variant='head'>Name</TableCell>
-          <TableCell align='left' variant='head'>Exchange</TableCell>
-          <TableCell align='left' variant='head'>Currency</TableCell>
-
+          <TableCell variant="head"></TableCell>
+          <TableCell align="left" variant="head">
+            Ticker
+          </TableCell>
+          <TableCell align="left" variant="head">
+            Name
+          </TableCell>
+          <TableCell align="left" variant="head">
+            Exchange
+          </TableCell>
+          <TableCell align="left" variant="head">
+            Currency
+          </TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
-        {stockList.map(stock => (
+        {sortedStockList.map(stock => (
           <StockListExcept key={stock.ticker} stock={stock} />
         ))}
       </TableBody>

@@ -6,7 +6,7 @@ interface StockListState {
 }
 
 export const initialState: StockListState = {
-  selectedStocks: []
+  selectedStocks: [],
 };
 
 const stockListSlice = createSlice({
@@ -15,11 +15,11 @@ const stockListSlice = createSlice({
   reducers: {
     selectedStocksUpdated: (state, action: PayloadAction<string>) => {
       if (state.selectedStocks.includes(action.payload)) {
-        state.selectedStocks = state.selectedStocks.filter(it => it !== action.payload)
+        state.selectedStocks = state.selectedStocks.filter(it => it !== action.payload);
       } else {
         state.selectedStocks.push(action.payload);
       }
-    }
+    },
   },
 });
 

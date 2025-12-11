@@ -13,7 +13,7 @@ export interface StockChartProps {
   ticker: string;
   from: string;
   to: string;
-}  
+}
 
 const stockChartSlice = createSlice({
   name: "chart",
@@ -21,12 +21,12 @@ const stockChartSlice = createSlice({
   reducers: {
     tickersUpdated: (state, action: PayloadAction<string>) => {
       if (state.tickers.includes(action.payload)) {
-        state.tickers = state.tickers.filter(it => it !== action.payload)
+        state.tickers = state.tickers.filter(it => it !== action.payload);
       } else {
         state.tickers.push(action.payload);
       }
-    }
-  }
+    },
+  },
 });
 
 export default stockChartSlice.reducer;
