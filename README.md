@@ -1,8 +1,8 @@
-# Schroder's technical test
+# React Playground
 
-My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, starting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistence.
+My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, starting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistance.
 
-This is not a read me in the traditional sense but rather a diary of thngs I learnt/fought with along the way.
+This is not a read me in the traditional sense but rather a diary of things I learnt/fought with along the way.
 
 ## 2025-10-04
 
@@ -12,10 +12,9 @@ Bit of a faff (some of which was removing the prop-drilling I had initially gone
 
 The biggest fight I had was with getting Redux DevTools to acknowledge the store. AIUI the lack of middleware in the store in this iteration is the reason for this which is why I've had to [explicitly link them up](https://github.com/zalmoxisus/redux-devtools-extension/blob/master/docs/Recipes.md#using-in-a-typescript-project).
 
-
 ## 2025-10-10
 
-Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistence, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
+Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistance, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
 
 Not knowing where to start, I took the sensible course and went looking to see [how others](https://stackoverflow.com/questions/43044696/test-a-create-react-app-index-js-file) have [gone about it](https://joaoforja.com/blog/how-to-test-a-rect-app-indexjs).
 
@@ -42,6 +41,7 @@ describe("Application root", () => {
 ```
 
 There are two issues
+
 1. VSCode flags a TypeScript error: `TS2339: Property 'render' does not exist on type 'typeof import("/Users/MisanthropeGirl/Websites/interviews/schroders/node_modules/@types/react-dom/index")'`.
 2. `TypeError: tk.CSS?.supports is not a function` on StockChart.tsx (which is the Highcharts import).
 
@@ -66,15 +66,16 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     require("./index.tsx");
-    
+
     expect(createRoot).toHaveBeenCalledWith(div);
   });
 });
 ```
 
 Key Changes:
+
 1. Import from `react-dom/client` instead of `react-dom`
 2. Mock `createRoot` instead of `render`
 3. `createRoot` returns an object with `render` and unmount methods
@@ -126,9 +127,9 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     require("./index.tsx");
-    
+
     expect(createRoot).toHaveBeenCalledWith(div);
   });
 });
@@ -173,14 +174,14 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     // Clear any previous calls
     mockCreateRoot.mockClear();
     mockRender.mockClear();
-    
+
     // Now require index.tsx which will use the mocked createRoot
     require("./index.tsx");
-    
+
     expect(mockCreateRoot).toHaveBeenCalledWith(div);
     expect(mockRender).toHaveBeenCalled();
   });
@@ -188,6 +189,7 @@ describe("Application root", () => {
 ```
 
 Key changes:
+
 1. Removed the import of `createRoot` at the top since you're mocking it
 2. Created `mockRender` and `mockCreateRoot` before the mock so you can reference them in your assertions
 3. Clear mocks before the test to ensure clean state
@@ -235,7 +237,7 @@ describe("Application root", () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Create root element
     const root = document.createElement("div");
     root.id = "root";
@@ -250,12 +252,12 @@ describe("Application root", () => {
   it("should render without crashing", () => {
     // Manually execute what index.tsx does
     const rootElement = document.getElementById("root") as HTMLElement;
-    
+
     // Import and execute
     jest.isolateModules(() => {
       require("./index.tsx");
     });
-    
+
     expect(createRoot).toHaveBeenCalledWith(rootElement);
     expect(mockRender).toHaveBeenCalled();
   });
@@ -284,11 +286,12 @@ Mocking the `dataFetch` function so I can unit test it. Apparently I can do this
 
 Got a bit hung up trying to figure out the fail path (`utilities/index.ts:7`) so asked Claude and then asked it to run an eye over what I'd done over the last couple of days.
 
-Ignoring the occasional 'no need to test this, it is trivial' *cough* actions *cough* the helpful feedback was:
+Ignoring the occasional 'no need to test this, it is trivial' _cough_ actions _cough_ the helpful feedback was:
+
 1. Utilities: What if the JSON response is invalid?
 2. Reducers: What if the action doesn't match any of the options?
 3. Reducers: What if the state is undefined?
-4. Reducesr: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
+4. Reducers: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
 5. Selectors: Null/undefined state handling
 6. Selectors: Empty selectedTickers
 
@@ -304,7 +307,7 @@ Added basic 'does it render without crashing tests' for each component and start
 
 ## 2025-10-28
 
-Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch tself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
+Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch itself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
 
 Started out using `fireEvent` to simulate the user interactions but was pointed at `userEvent` instead. I understand that this is the better way of emulating them but trying to update inputs with `.type()` (or at least date inputs) requires clearing the input first - although that may just be because of Material UI.
 
@@ -322,7 +325,7 @@ Wrote the tests for `stockChart.tsx`. Mostly straightforward - except for when I
 
 Moved the `dataTransform` function to `utilities.tsx` so I could test it in isolation.
 
-If I exclude the files added when I was using mock service workers and `reportWebVitals.ts` then overall test coverage is close to 100%. Even with them in it is over 90%. It's mainly the lack of testing for `index.tsx` (see above) which is dragging it down so I'm going to declare myself satisifed wth my efforts. I may tomorrow though run everything through Claude and ask it to point out any potential improvements. After that, it is time to see what integration and end-to-end testing can potentially be applied.
+If I exclude the files added when I was using mock service workers and `reportWebVitals.ts` then overall test coverage is close to 100%. Even with them in it is over 90%. It's mainly the lack of testing for `index.tsx` (see above) which is dragging it down so I'm going to declare myself satisfied wth my efforts. I may tomorrow though run everything through Claude and ask it to point out any potential improvements. After that, it is time to see what integration and end-to-end testing can potentially be applied.
 
 ## 2025-11-01
 
@@ -331,16 +334,19 @@ I have now run the tests for the components and utilities past Claude with the p
 Relevant feedback for each was as follows;
 
 ### `utilities.ts`
+
 1. Handle special cases in `convertObjectToString`. I'm not URL-encoding values as the API documentation didn't mention it.
 2. Handle an empty array being passed to `dataTransform`.
 3. Checking that the object parameters passed to `dataFetch` are in the queryString.
 
 ### `ChartOptions.tsx`
+
 1. Testing the happy path thoroughly. No tests for successful `fromDate` and `toDate` changes or for when one date is initially invalid but becomes valid when the second date changes.
 2. Edge case around equal dates
 3. Radio button accessibility
 
 ### `StockList.tsx`
+
 1. Avoiding repetition
 2. Unchecking a checkbox
 3. Magic numbers
@@ -350,6 +356,7 @@ Relevant feedback for each was as follows;
 As well as suggesting tests for the defensive coding of line 56 and dealing with some data persistence between tests.
 
 ### `StockChart.tsx`
+
 1. Hadn't tested that things work correctly when the date range or the price option change. Doing the former took care testing line 36 (obvious really).
 2. More testing around adding and removing tickers, including adding 2 or more.
 3. Handing the if statements around the `newTicker` and `removedTicker` actions.
@@ -401,9 +408,9 @@ which also worked so I'll go with that instead.
 
 ## 2025-11-17
 
-*Dates are out of order as everything from this point onwards is the branch rather than the base*
+_Dates are out of order as everything from this point onwards is the branch rather than the base_
 
-Switched over to modern Redux today, aka ReactToolkit. I read the first four pages of the Redux Essentials tutorial last week and I was pleasantly suprised at how easy it was to migrate from old style to new. Obviously the tests exploded but they were easy enough to update. I grimaced a bit when I realised that I'd have to change `test-utils.tsx` but the necessary adjustments were simple.
+Switched over to modern Redux today, aka ReactToolkit. I read the first four pages of the Redux Essentials tutorial last week and I was pleasantly surprised at how easy it was to migrate from old style to new. Obviously the tests exploded but they were easy enough to update. I grimaced a bit when I realised that I'd have to change `test-utils.tsx` but the necessary adjustments were simple.
 
 ## 2025-11-18
 
@@ -421,15 +428,16 @@ For the former I scratched my head for some time without success as to why many 
 
 ## 2025-11-26
 
-Looked at making performance improvments. I broke up `ChartOptions.tsx` a few days ago as it seemed as though there was some unnecessary rendering going on (if I'd read React DevTools' Profile tab correctly). Today I dropped much of the app in to Calude and asked it for further suggestions.
+Looked at making performance improvements. I broke up `ChartOptions.tsx` a few days ago as it seemed as though there was some unnecessary rendering going on (if I'd read React DevTools' Profile tab correctly). Today I dropped much of the app in to Claude and asked it for further suggestions.
 
-Aside from a typo and a copy/paste error, its main feedback was the lack of caching, of which I am aware and fully intend to look in to at some future point, and `dataTransform` running after every call to the API which fetchs the data for the stock chart. The minor issues were a lack of deduplication (which for this app means rapidly checking, unchecking, rechecking etc on a particular stock) and using Array lookup functions rather than Set() since that is quicker (more of an issue if the limit of three stocks on the chart wasn't there).
+Aside from a typo and a copy/paste error, its main feedback was the lack of caching, of which I am aware and fully intend to look in to at some future point, and `dataTransform` running after every call to the API which fetches the data for the stock chart. The minor issues were a lack of deduplication (which for this app means rapidly checking, unchecking, rechecking etc on a particular stock) and using Array lookup functions rather than Set() since that is quicker (more of an issue if the limit of three stocks on the chart wasn't there).
 
-I'd been ambivilent about leaving `dataTransform` where it was anyway so was happy to rework that and move it in to the slice, only doing the transform for each API call result rather than every ticker curently selected. Along the way was I was introduced to [TypeScript's 'Record' Utility Type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type) which made typing what I was doing so much easier. Using Set(), once I'd asked for some pointers, makes bits of the code look a lot cleaner (and is possible since there won't be any duplicates).
+I'd been ambivalent about leaving `dataTransform` where it was anyway so was happy to rework that and move it in to the slice, only doing the transform for each API call result rather than every ticker currently selected. Along the way was I was introduced to [TypeScript's 'Record' Utility Type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type) which made typing what I was doing so much easier. Using Set(), once I'd asked for some pointers, makes bits of the code look a lot cleaner (and is possible since there won't be any duplicates).
 
 ## 2025-11-29
 
 ### Part 1
+
 Fixed an issue whereby changing the price option caused Highcharts to throw an error. According to Claude this is because Highcharts is trying to mutate the data frozen by Redux/Immer, i.e. a direct consequence of moving the data transform to the slice. It provided several solutions, all but one using `JSON.parse(JSON.stringify())` at their core, to create a mutable copy of the data so that Highcharts can use it.
 
 ### Part 2
@@ -438,7 +446,7 @@ After reading the [section about data normalisation](https://redux.js.org/tutori
 
 The first problem I had was the lack of an actual ID property in the API response (there is, of course, a property which functions as such: 'ticker') so I extended my `Stock` type and added a property with the name of ID with the value from the 'ticker' property before the response is added to the state.
 
-The second was that the checkboxes were not showing as checked, even though if I checked enugh of them, the others were disabled. Explicitly adding the checked paramater with a piece of conditional logic, i.e. `checked={selectedStocks.includes(stock.ticker)}`, fixed this.
+The second was that the checkboxes were not showing as checked, even though if I checked enough of them, the others were disabled. Explicitly adding the checked parameter with a piece of conditional logic, i.e. `checked={selectedStocks.includes(stock.ticker)}`, fixed this.
 
 I doubt the app gained anything by me doing this but I can see how normalisation helps. I know that we made use it at F1000 (even if I didn't how what it was called) and I'm thinking how I can make use of it for the Mount website as well, either when building the API output or processing it in the JavaScript afterwards.
 
@@ -457,8 +465,9 @@ Converting `StockList.tsx` was straightforward enough once I'd found the `params
 I then asked Claude if I was on the right track. The answer can best be described as 'sort of'.
 
 Things I learnt:
+
 1. I don't need to use async/await when calling the trigger function.
-2. Since the `result` object updates automatically when the requst completes I can listen for changes to parts of that object and use them to trigger a `useEffect` that will update the stored chart data. Obvious really.
+2. Since the `result` object updates automatically when the request completes I can listen for changes to parts of that object and use them to trigger a `useEffect` that will update the stored chart data. Obvious really.
 
 ## 2025-12-04
 
@@ -499,12 +508,13 @@ describe('StockList', () => {
 ```
 
 What I learnt:
+
 1. For this I should use `mockReturnValue` rather then `mockResolvedValue` as the hook return values, not promises
 2. I should probably look in to using mock service workers instead
 
 ## 2025-12-05
 
-Unsuprisingly the above needed further modificaion for the `useLazyQuery` version of the generated hook, viz:
+Unsurprisingly the above needed further modification for the `useLazyQuery` version of the generated hook, viz:
 
 ```
 describe('StockChart', () => {
@@ -534,15 +544,18 @@ describe('StockChart', () => {
     mockUseLazyGetStockDataQuery.mockReturnValue([mockTrigger, mockResult]);
   });
   ...
-});```
+});
+```
 
 A helper function was also suggested but it resulted in various tests blowing up so I gave up on that as a bad job.
 
 There are two lines which the coverage reports says are untested:
+
 1. `StockChart.tsx:37` - this is the error handling. I have tried to test this but so far unsuccessfully so will ask further.
 2. `apiSlice.ts:25` - which is `query: (params) => ()` but I can't see why since the trigger is being mocked? Another question to ask.
 
 Answers:
-1. Firstly, with help, I did away logging the error to the console (which avoided some unnecessary logic to spy on the console) and shifted to displaying it to screen. I couldn't work out how to within what I already had, except for the horrible option of trying to mutate the `result` object, and didn't think about using a new piece of component state. Blame a bain fade, tiredness, code blindness or general stupidity. Once that was done and I'd been reminded of Jest's rejection methods the necessary tests ame easily enough.
+
+1. Firstly, with help, I did away logging the error to the console (which avoided some unnecessary logic to spy on the console) and shifted to displaying it to screen. I couldn't work out how to within what I already had, except for the horrible option of trying to mutate the `result` object, and didn't think about using a new piece of component state. Blame a brain fade, tiredness, code blindness or general stupidity. Once that was done and I'd been reminded of Jest's rejection methods the necessary tests ame easily enough.
 
 2. Claude said this is because I'm mocking the hook so this piece of configuration is not touched. It also said not to bother wasting my time with it here, pointing out that i'd be better off dealing with it via integration testing and mock service workers - which I think have to be the next item on the agenda.
