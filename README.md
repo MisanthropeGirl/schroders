@@ -559,3 +559,9 @@ Answers:
 1. Firstly, with help, I did away logging the error to the console (which avoided some unnecessary logic to spy on the console) and shifted to displaying it to screen. I couldn't work out how to within what I already had, except for the horrible option of trying to mutate the `result` object, and didn't think about using a new piece of component state. Blame a brain fade, tiredness, code blindness or general stupidity. Once that was done and I'd been reminded of Jest's rejection methods the necessary tests ame easily enough.
 
 2. Claude said this is because I'm mocking the hook so this piece of configuration is not touched. It also said not to bother wasting my time with it here, pointing out that i'd be better off dealing with it via integration testing and mock service workers - which I think have to be the next item on the agenda.
+
+## 2025-12-15
+
+Make use of the `usePrefetch` hook to add some simple pagination to `StockList.tsx`. It could have been added without it but I felt that the hook was a useful one and pagination was an obvious use case. I'd originally thought about using it to do the initial load but since it loads immediately anyway there was no point - plus I'd lose the caching if I understand matters correctly. The Polygon API works by giving a link to the next set of results rather than a `page` parameter so it took a bit of thinking to figure out how to be able to go backwards. `useRef` and an array of URLs was my eventual solution.
+
+A couple of idiot mistakes when writing the test made me feel as if I'm still not getting testing. I should have remembered a/ to add the apiSlice middleware to the fake store in `test-utils.tsx` and b/ about chaining mock results together at the start of an individual test.

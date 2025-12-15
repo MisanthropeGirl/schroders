@@ -3,6 +3,7 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { render, RenderOptions } from "@testing-library/react";
 import { rootReducer, RootState } from "./app/store";
+import { apiSlice } from "./app/apiSlice";
 
 interface CustomRenderResult extends ReturnType<typeof render> {
   store: ReturnType<typeof configureStore>;
@@ -21,13 +22,12 @@ const customRender = (
   const initialState = rootReducer(undefined, { type: "@@INIT" });
 
   // Merge preloaded state with initial state
-  const mergedState = preloadedState
-    ? { ...initialState, ...preloadedState }
-    : initialState;
+  const mergedState = preloadedState ? { ...initialState, ...preloadedState } : initialState;
 
   const testStore = configureStore({
     reducer: rootReducer,
     preloadedState: mergedState,
+    middleware: getDefaultMiddleware => getDefaultMiddleware().concat(apiSlice.middleware),
   });
 
   const ReduxProvider = ({ children }: { children: React.ReactNode }) => {

@@ -1,0 +1,10 @@
+.navigation {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding-bottom: 1rem;
+}
+
+.navigation > button {
+  width: 18ch;
+}

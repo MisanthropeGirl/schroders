@@ -7,9 +7,9 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: "https://api.polygon.io/" }),
   keepUnusedDataFor: 3600, // one hour
   endpoints: builder => ({
-    getStockList: builder.query<StockListApiResponse, void>({
-      query: () => ({
-        url: "/v3/reference/tickers",
+    getStockList: builder.query<StockListApiResponse, string>({
+      query: url => ({
+        url,
         params: {
           apiKey: POLYGON_API_KEY,
           market: "stocks",
@@ -35,4 +35,4 @@ export const apiSlice = createApi({
   }),
 });
 
-export const { useGetStockListQuery, useLazyGetStockDataQuery } = apiSlice;
+export const { useGetStockListQuery, useLazyGetStockDataQuery, usePrefetch } = apiSlice;

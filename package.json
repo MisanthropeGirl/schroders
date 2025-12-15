@@ -1,6 +1,6 @@
 {
   "name": "schroders",
-  "version": "0.5.11",
+  "version": "0.5.12",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -60,6 +60,18 @@
   "jest": {
     "transformIgnorePatterns": [
       "node_modules/(?!@standard-schema)"
-    ]
+    ],
+    "coveragePathIgnorePatterns": [
+      "index.tsx",
+      "reportWebVitals.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 95,
+        "branches": 95,
+        "functions": 95,
+        "lines": 95
+      }
+    }
   }
 }

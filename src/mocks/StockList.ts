@@ -148,11 +148,13 @@ export const stockListApiOutput: StockListApiResponse = {
   status: "OK",
 };
 
+export const stockListApiOutput2: StockListApiResponse = {
+  ...stockListApiOutput,
+  results: stockList.slice(5),
+};
+
 export const stockListApiOutputEmpty: StockListApiResponse = {
-  count: 10,
-  next_url:
-    "https://api.polygon.io/v3/reference/tickers?cursor=YWN0aXZlPXRydWUmZGF0ZT0yMDIxLTA0LTI1JmxpbWl0PTEmb3JkZXI9YXNjJnBhZ2VfbWFya2VyPUElN0M5YWRjMjY0ZTgyM2E1ZjBiOGUyNDc5YmZiOGE1YmYwNDVkYzU0YjgwMDcyMWE2YmI1ZjBjMjQwMjU4MjFmNGZiJnNvcnQ9dGlja2Vy",
-  request_id: "e70013d92930de90e089dc8fa098888e",
+  ...stockListApiOutput,
+  count: 0,
   results: [],
-  status: "OK",
 };

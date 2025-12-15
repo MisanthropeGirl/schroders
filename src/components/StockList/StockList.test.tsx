@@ -1,7 +1,12 @@
 import userEvent from "@testing-library/user-event";
 import { fireEvent, render, screen, waitFor } from "../../test-utils";
 import { useGetStockListQuery } from "../../app/apiSlice";
-import { stockListApiOutput, stockListApiOutputEmpty, stockList } from "../../mocks/StockList";
+import {
+  stockListApiOutput,
+  stockListApiOutput2,
+  stockListApiOutputEmpty,
+  stockList,
+} from "../../mocks/StockList";
 import { initialState } from "./stockListSlice";
 import StockList from "./StockList";
 
@@ -11,7 +16,9 @@ jest.mock("../../app/apiSlice", () => ({
   useGetStockListQuery: jest.fn(),
 }));
 
-const mockUseGetStockListQuery = useGetStockListQuery as jest.MockedFunction<typeof useGetStockListQuery>;
+const mockUseGetStockListQuery = useGetStockListQuery as jest.MockedFunction<
+  typeof useGetStockListQuery
+>;
 
 describe("StockList", () => {
   beforeEach(() => {
@@ -207,6 +214,88 @@ describe("StockList", () => {
     // The defensive logic should prevent the 4th ticker from being added
     expect(store.getState().stocks.selectedStocks).toHaveLength(3);
     expect(store.getState().stocks.selectedStocks).not.toContain(stockList[3].ticker);
+  });
+
+  test("the previous button should be initially disabled and do nothing", () => {
+    render(<StockList />);
+
+    const btn: HTMLButtonElement = screen.getByTestId("btn-prev");
+    expect(btn.disabled).toBe(true);
+
+    fireEvent.click(btn);
+
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
+    const checkboxes = table.getElementsByTagName("input");
+    expect(checkboxes[0].value).toBe("A");
+  });
+
+  test("the previous button should be enabled when the next button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<StockList />);
+
+    const btnPrev: HTMLButtonElement = screen.getByTestId("btn-prev");
+    expect(btnPrev.disabled).toBe(true);
+
+    const btnNext: HTMLButtonElement = screen.getByTestId("btn-next");
+    expect(btnNext.disabled).toBe(false);
+
+    await user.click(btnNext);
+    expect(btnPrev.disabled).toBe(false);
+  });
+
+  test("a different set of stocks are shown when the user clicks on the navigation buttons", async () => {
+    mockUseGetStockListQuery
+      .mockReturnValueOnce({
+        data: stockListApiOutput,
+        isLoading: false,
+        isSuccess: true,
+        isError: false,
+        error: undefined,
+      } as any)
+      // Second call (after clicking next) returns different data
+      .mockReturnValueOnce({
+        data: stockListApiOutput2,
+        isLoading: false,
+        isSuccess: true,
+        isError: false,
+        error: undefined,
+      } as any)
+      // Third call (after clicking prev) returns initial data again
+      .mockReturnValueOnce({
+        data: stockListApiOutput,
+        isLoading: false,
+        isSuccess: true,
+        isError: false,
+        error: undefined,
+      } as any);
+
+    const user = userEvent.setup();
+    render(<StockList />);
+
+    const btnPrev: HTMLButtonElement = screen.getByTestId("btn-prev");
+    const btnNext: HTMLButtonElement = screen.getByTestId("btn-next");
+
+    const table: HTMLTableElement = screen.getByTestId("stocklist");
+    let checkboxes = table.getElementsByTagName("input");
+
+    expect(btnPrev.disabled).toBe(true);
+    expect(checkboxes[0].value).toBe("A");
+
+    await user.click(btnNext);
+    expect(btnPrev.disabled).toBe(false);
+
+    await waitFor(() => {
+      checkboxes = table.getElementsByTagName("input");
+      expect(checkboxes[0].value).toBe("AAT");
+    });
+
+    await user.click(btnPrev);
+    expect(btnPrev.disabled).toBe(true);
+
+    await waitFor(() => {
+      checkboxes = table.getElementsByTagName("input");
+      expect(checkboxes[0].value).toBe("A");
+    });
   });
 
   test("it should display an error message when data fetch fails with Error", async () => {
