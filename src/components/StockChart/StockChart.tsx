@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import * as Highcharts from "highcharts";
 import { HighchartsReact } from "highcharts-react-official";
-import { useLazyGetStockDataQuery } from "../../app/apiSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { PRICE_SERIES_CODES, chartPriceOptions, createInitialChartDataState } from "../../constants";
-import { removeTransformedDataByTicker, dataTransform } from "../../utilities";
+import { useStockChartData } from "../../hooks/useStockChartData";
 import { selectFromDate, selectToDate } from "../DateSelector/dateSelectorSlice";
 import { selectPriceOption } from "../PriceOptions/priceOptionsSlice";
 import { selectStocksSelected } from "../StockList/stockListSlice";
@@ -13,10 +11,6 @@ import "./StockChart.css";
 
 function StockChart() {
   const dispatch = useAppDispatch();
-  const [getStockData, result] = useLazyGetStockDataQuery();
-
-  const [chartData, setChartData] = useState<Record<string, TransformedData[]>>(createInitialChartDataState());
-  const [fetchErrors, setFetchErrors] = useState<Record<string, string>>({});
 
   const chartTickers = useAppSelector(selectChartTickers);
   const selectedStocks = useAppSelector(selectStocksSelected);
@@ -24,95 +18,20 @@ function StockChart() {
   const toDate = useAppSelector(selectToDate);
   const priceOption = useAppSelector(selectPriceOption);
 
-  const isInitialMount = useRef(true);
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
-  const loadData = async (ticker: string, from: string = fromDate, to: string = toDate) => {
-    try {
-      const response = await getStockData({ ticker, from, to }).unwrap();
-      updateChartData(response.ticker, response.results);
+  const { chartData, fetchErrors, isError, error } = useStockChartData(
+    selectedStocks,
+    chartTickers,
+    fromDate,
+    toDate,
+    ticker => dispatch(tickersUpdated(ticker)),
+  );
 
-      // Clear any previous error for this ticker
-      setFetchErrors(prev => {
-        const updated = { ...prev };
-        delete updated[ticker];
-        return updated;
-      });
-    } catch (error) {
-      // Store the error for this ticker
-      setFetchErrors(prev => ({
-        ...prev,
-        [ticker]: error instanceof Error ? error.message : "Failed to fetch data",
-      }));
-    }
-  };
-
-  const updateChartData = (ticker: string, results: StockData[]) => {
-    setChartData(prev => {
-      const updated = { ...prev };
-      removeTransformedDataByTicker(updated, ticker);
-
-      chartPriceOptions.forEach(option => {
-        updated[option].push({
-          type: "line",
-          name: ticker,
-          data: dataTransform(results, PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES]),
-        });
-      });
-
-      return updated;
-    });
-  };
-
-  // Load data for newly selected stocks
-  useEffect(() => {
-    const existingSet = new Set(chartTickers);
-
-    selectedStocks
-      .filter(ticker => !existingSet.has(ticker))
-      .forEach(ticker => {
-        loadData(ticker).then(() => dispatch(tickersUpdated(ticker)));
-      });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStocks]);
-
-  // Reload data when dates change
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    selectedStocks.forEach(ticker => loadData(ticker, fromDate, toDate));
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromDate, toDate]);
-
-  // Remove data for deselected stocks
-  useEffect(() => {
-    const selectedSet = new Set(selectedStocks);
-    const tickersToRemove = chartTickers.filter(ticker => !selectedSet.has(ticker));
-
-    if (tickersToRemove.length > 0) {
-      setChartData(prev => {
-        const updated = { ...prev };
-
-        tickersToRemove.forEach(ticker => removeTransformedDataByTicker(updated, ticker));
-
-        return updated;
-      });
-
-      tickersToRemove.forEach(ticker => dispatch(tickersUpdated(ticker)));
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStocks]);
-
-  if (result.isError) {
+  if (isError) {
     return (
       <div className="chart">
-        <div className="chartMsg">{result.error.toString()}</div>
+        <div className="chartMsg">{error!.toString()}</div>
       </div>
     );
   }

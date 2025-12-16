@@ -19,7 +19,9 @@ jest.mock("highcharts-react-official", () => ({
   HighchartsReact: () => null,
 }));
 
-const mockUseLazyGetStockDataQuery = useLazyGetStockDataQuery as jest.MockedFunction<typeof useLazyGetStockDataQuery>;
+const mockUseLazyGetStockDataQuery = useLazyGetStockDataQuery as jest.MockedFunction<
+  typeof useLazyGetStockDataQuery
+>;
 
 describe("StockChart", () => {
   let mockTrigger: jest.Mock;
@@ -90,11 +92,14 @@ describe("StockChart", () => {
     act(() => store.dispatch(selectedStocksUpdated("A")));
 
     await waitFor(() => {
-      expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: "A",
-        from: expect.any(String),
-        to: expect.any(String),
-      });
+      expect(mockTrigger).toHaveBeenCalledWith(
+        {
+          ticker: "A",
+          from: expect.any(String),
+          to: expect.any(String),
+        },
+        true,
+      );
     });
   });
 
@@ -279,11 +284,14 @@ describe("StockChart", () => {
     });
 
     await waitFor(() => {
-      expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: "A",
-        from: expect.any(String),
-        to: expect.any(String),
-      });
+      expect(mockTrigger).toHaveBeenCalledWith(
+        {
+          ticker: "A",
+          from: expect.any(String),
+          to: expect.any(String),
+        },
+        true,
+      );
     });
 
     expect(screen.getByTestId("stockchart")).toBeInTheDocument();
@@ -291,21 +299,27 @@ describe("StockChart", () => {
     act(() => store.dispatch(selectedStocksUpdated("AA")));
 
     await waitFor(() => {
-      expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: "AA",
-        from: expect.any(String),
-        to: expect.any(String),
-      });
+      expect(mockTrigger).toHaveBeenCalledWith(
+        {
+          ticker: "AA",
+          from: expect.any(String),
+          to: expect.any(String),
+        },
+        true,
+      );
     });
 
     act(() => store.dispatch(selectedStocksUpdated("AAM")));
 
     await waitFor(() => {
-      expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: "AAM",
-        from: expect.any(String),
-        to: expect.any(String),
-      });
+      expect(mockTrigger).toHaveBeenCalledWith(
+        {
+          ticker: "AAM",
+          from: expect.any(String),
+          to: expect.any(String),
+        },
+        true,
+      );
     });
 
     // Chart should still be visible
@@ -372,11 +386,14 @@ describe("StockChart", () => {
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
 
     await waitFor(() => {
-      expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: "A",
-        from: DATE_MIN,
-        to: DATE_MIDDLE,
-      });
+      expect(mockTrigger).toHaveBeenCalledWith(
+        {
+          ticker: "A",
+          from: DATE_MIN,
+          to: DATE_MIDDLE,
+        },
+        true,
+      );
     });
   });
 
@@ -395,19 +412,25 @@ describe("StockChart", () => {
     act(() => store.dispatch(datesUpdated({ fromDate: DATE_MIN, toDate: DATE_MIDDLE })));
 
     await waitFor(() => {
-      expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: "A",
-        from: DATE_MIN,
-        to: DATE_MIDDLE,
-      });
+      expect(mockTrigger).toHaveBeenCalledWith(
+        {
+          ticker: "A",
+          from: DATE_MIN,
+          to: DATE_MIDDLE,
+        },
+        true,
+      );
     });
 
     await waitFor(() => {
-      expect(mockTrigger).toHaveBeenCalledWith({
-        ticker: "AA",
-        from: DATE_MIN,
-        to: DATE_MIDDLE,
-      });
+      expect(mockTrigger).toHaveBeenCalledWith(
+        {
+          ticker: "AA",
+          from: DATE_MIN,
+          to: DATE_MIDDLE,
+        },
+        true,
+      );
     });
 
     // Flush all pending promises and state updates

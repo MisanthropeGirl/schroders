@@ -562,6 +562,14 @@ Answers:
 
 ## 2025-12-15
 
-Make use of the `usePrefetch` hook to add some simple pagination to `StockList.tsx`. It could have been added without it but I felt that the hook was a useful one and pagination was an obvious use case. I'd originally thought about using it to do the initial load but since it loads immediately anyway there was no point - plus I'd lose the caching if I understand matters correctly. The Polygon API works by giving a link to the next set of results rather than a `page` parameter so it took a bit of thinking to figure out how to be able to go backwards. `useRef` and an array of URLs was my eventual solution.
+Make use of the [`usePrefetch`](https://redux-toolkit.js.org/rtk-query/api/created-api/hooks#useprefetch) hook to add some simple pagination to `StockList.tsx`. It could have been added without it but I felt that the hook was a useful one and pagination was an obvious use case. I'd originally thought about using it to do the initial load but since it loads immediately anyway there was no point - plus I'd lose the caching if I understand matters correctly. The Polygon API works by giving a link to the next set of results rather than a `page` parameter so it took a bit of thinking to figure out how to be able to go backwards. `useRef` and an array of URLs was my eventual solution.
 
 A couple of idiot mistakes when writing the test made me feel as if I'm still not getting testing. I should have remembered a/ to add the apiSlice middleware to the fake store in `test-utils.tsx` and b/ about chaining mock results together at the start of an individual test.
+
+## 2025-12-16
+
+The pagination feels like it would be an ideal use case for the [`useInfiniteQuery`](https://redux-toolkit.js.org/rtk-query/api/created-api/hooks#useinfinitequery) hook if the Polygon API used `page` parameter but since it doesn't…
+
+Added the `preferCacheValue` parameter to the trigger function of the `useLazyQuery` hook since the documentation says that that'll return a cached value if one exists (since `useLazyQuery` otherwise always sends a new request to the server).
+
+Extracted the code which fetches the chart data in to its own hook.
