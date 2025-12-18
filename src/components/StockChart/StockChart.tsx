@@ -1,12 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useImmer } from "use-immer";
-import { dataFetch, dataTransform } from '../../utilities';
+import { dataFetch, dataTransform } from "../../utilities";
 import { POLYGON_DATA_URL, PRICE_SERIES_CODES } from "../../constants";
-import * as Highcharts from 'highcharts';
-import { HighchartsReact } from 'highcharts-react-official';
-import './StockChart.css';
+import * as Highcharts from "highcharts";
+import { HighchartsReact } from "highcharts-react-official";
+import "./StockChart.css";
 import { useSelector } from "react-redux";
-import { selectFromDate, selectPriceOption, selectSelectedTickers, selectToDate } from "../../selectors";
+import {
+  selectFromDate,
+  selectPriceOption,
+  selectSelectedTickers,
+  selectToDate,
+} from "../../selectors";
 
 function StockChart() {
   const [data, setData] = useImmer<RawChartData[]>([]);
@@ -23,35 +28,30 @@ function StockChart() {
 
   const loadData = async (ticker: string, from: string = fromDate, to: string = toDate) => {
     try {
-      const stockData = await dataFetch(
-        `${POLYGON_DATA_URL}/${ticker}/range/1/day/${from}/${to}`,
-        {
-          adjusted: true,
-          sort: 'asc',
-        }
-      );
+      const stockData = await dataFetch(`${POLYGON_DATA_URL}/${ticker}/range/1/day/${from}/${to}`, {
+        adjusted: true,
+        sort: "asc",
+      });
 
       const tickerIndex = data.findIndex(it => it.ticker === ticker);
-      setData((draft) => {
+      setData(draft => {
         if (tickerIndex > -1) {
           draft[tickerIndex].data = stockData.results;
         } else {
           draft.push({ ticker, data: stockData.results });
         }
-      })
+      });
       setError(false);
-    }
-    catch (err: unknown) {
+    } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('There was an error. Please refer to the console.');
+        setError("There was an error. Please refer to the console.");
       }
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (selectedTickers.length === 0) {
@@ -69,13 +69,13 @@ function StockChart() {
 
     // loop over data and see if there is a match in selectedTickers
     // remove the entry if there isn't
-    let removedTicker = '';
+    let removedTicker = "";
     data.forEach(it => {
       if (!selectedTickers.includes(it.ticker)) {
         removedTicker = it.ticker;
       }
     });
-    if (removedTicker !== '') {
+    if (removedTicker !== "") {
       setData(data => data.filter(d => d.ticker !== removedTicker));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,50 +110,46 @@ function StockChart() {
   }
 
   const transformedData: { [key: string]: ChartData[] } = {};
-  transformedData['Open'] = dataTransform(data, PRICE_SERIES_CODES.OPEN);
-  transformedData['High'] = dataTransform(data, PRICE_SERIES_CODES.HIGH);
-  transformedData['Low'] = dataTransform(data, PRICE_SERIES_CODES.LOW);
-  transformedData['Close'] = dataTransform(data, PRICE_SERIES_CODES.CLOSE);
+  transformedData["Open"] = dataTransform(data, PRICE_SERIES_CODES.OPEN);
+  transformedData["High"] = dataTransform(data, PRICE_SERIES_CODES.HIGH);
+  transformedData["Low"] = dataTransform(data, PRICE_SERIES_CODES.LOW);
+  transformedData["Close"] = dataTransform(data, PRICE_SERIES_CODES.CLOSE);
 
   const chartOptions: Highcharts.Options = {
     chart: {
-      type: 'line',
+      type: "line",
     },
     title: {
-      text: `${priceOption} Price over time`
+      text: `${priceOption} Price over time`,
     },
     xAxis: {
-      type: 'datetime'
+      type: "datetime",
     },
     yAxis: {
       title: {
-        text: 'Price (USD)'
-      }
+        text: "Price (USD)",
+      },
     },
     legend: {
-      enabled: true
+      enabled: true,
     },
     plotOptions: {
       series: {
         label: {
-          connectorAllowed: false
+          connectorAllowed: false,
         },
-      }
+      },
     },
     // Gave up trying to fix the typescript issue here and bypassed it
     // @ts-ignore comment
-    series: transformedData[priceOption]
+    series: transformedData[priceOption],
   };
 
   return (
-    <div className="chart" data-testid='stockchart'>
-      <HighchartsReact
-        highcharts={Highcharts}
-        options={chartOptions}
-        ref={chartComponentRef}
-      />
+    <div className="chart" data-testid="stockchart">
+      <HighchartsReact highcharts={Highcharts} options={chartOptions} ref={chartComponentRef} />
     </div>
-  )
+  );
 }
 
 export default StockChart;

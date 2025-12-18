@@ -15,7 +15,7 @@ interface StockDataApiResult extends ApiResult {
 
 interface StockListApiResult extends ApiResult {
   count: number;
-  results: Stock[];
+  results: Stock[] | null;
 }
 
 interface Stock {
@@ -25,8 +25,8 @@ interface Stock {
   currency_name?: string;
   delisted_utc?: string;
   last_updated_utc?: string;
-  locale: 'us' | 'global';
-  market: 'stocks' | 'crypto' | 'fx' | 'otc' | 'indices';
+  locale: "us" | "global";
+  market: "stocks" | "crypto" | "fx" | "otc" | "indices";
   name: string;
   primary_exchange?: string;
   share_class_figi?: string;
@@ -63,12 +63,12 @@ interface SearchParams {
   exchange?: string;
   limit?: number;
   market?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
   sort?: string;
   type?: string;
 }
 
-type ChartPriceOptions = typeof chartPriceOptions[number];
+type ChartPriceOptions = (typeof chartPriceOptions)[number];
 
 interface Store {
   fromDate: string;

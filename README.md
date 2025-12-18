@@ -12,7 +12,6 @@ Bit of a faff (some of which was removing the prop-drilling I had initially gone
 
 The biggest fight I had was with getting Redux DevTools to acknowledge the store. AIUI the lack of middleware in the store in this iteration is the reason for this which is why I've had to [explicitly link them up](https://github.com/zalmoxisus/redux-devtools-extension/blob/master/docs/Recipes.md#using-in-a-typescript-project).
 
-
 ## 2025-10-10
 
 Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistence, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
@@ -42,6 +41,7 @@ describe("Application root", () => {
 ```
 
 There are two issues
+
 1. VSCode flags a TypeScript error: `TS2339: Property 'render' does not exist on type 'typeof import("/Users/MisanthropeGirl/Websites/interviews/schroders/node_modules/@types/react-dom/index")'`.
 2. `TypeError: tk.CSS?.supports is not a function` on StockChart.tsx (which is the Highcharts import).
 
@@ -66,15 +66,16 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     require("./index.tsx");
-    
+
     expect(createRoot).toHaveBeenCalledWith(div);
   });
 });
 ```
 
 Key Changes:
+
 1. Import from react-dom/client instead of react-dom
 2. Mock createRoot instead of render
 3. createRoot returns an object with render and unmount methods
@@ -126,9 +127,9 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     require("./index.tsx");
-    
+
     expect(createRoot).toHaveBeenCalledWith(div);
   });
 });
@@ -173,14 +174,14 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     // Clear any previous calls
     mockCreateRoot.mockClear();
     mockRender.mockClear();
-    
+
     // Now require index.tsx which will use the mocked createRoot
     require("./index.tsx");
-    
+
     expect(mockCreateRoot).toHaveBeenCalledWith(div);
     expect(mockRender).toHaveBeenCalled();
   });
@@ -188,6 +189,7 @@ describe("Application root", () => {
 ```
 
 Key changes:
+
 1. Removed the import of createRoot at the top since you're mocking it
 2. Created mockRender and mockCreateRoot before the mock so you can reference them in your assertions
 3. Clear mocks before the test to ensure clean state
@@ -235,7 +237,7 @@ describe("Application root", () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Create root element
     const root = document.createElement("div");
     root.id = "root";
@@ -250,12 +252,12 @@ describe("Application root", () => {
   it("should render without crashing", () => {
     // Manually execute what index.tsx does
     const rootElement = document.getElementById("root") as HTMLElement;
-    
+
     // Import and execute
     jest.isolateModules(() => {
       require("./index.tsx");
     });
-    
+
     expect(createRoot).toHaveBeenCalledWith(rootElement);
     expect(mockRender).toHaveBeenCalled();
   });
@@ -284,7 +286,8 @@ Mocking the `dataFetch` function so I can unit test it. Apparently I can do this
 
 Got a bit hung up trying to figure out the fail path (`utilities/index.ts:7`) so asked Claude and then asked it to run an eye over what I'd done over the last couple of days.
 
-Ignoring the occasional 'no need to test this, it is trivial' *cough* actions *cough* the helpful feedback was:
+Ignoring the occasional 'no need to test this, it is trivial' _cough_ actions _cough_ the helpful feedback was:
+
 1. Utilities: What if the JSON response is invalid?
 2. Reducers: What if the action doesn't match any of the options?
 3. Reducers: What if the state is undefined?
@@ -331,16 +334,19 @@ I have now run the tests for the components and utilities past Claude with the p
 Relevant feedback for each was as follows;
 
 ### `utilities.ts`
+
 1. Handle special cases in `convertObjectToString`. I'm not URL-encoding values as the API documentation didn't mention it.
 2. Handle an empty array being passed to `dataTransform`.
 3. Checking that the object parameters passed to `dataFetch` are in the queryString.
 
 ### `ChartOptions.tsx`
+
 1. Testing the happy path thoroughly. No tests for successful `fromDate` and `toDate` changes or for when one date is initially invalid but becomes valid when the second date changes.
 2. Edge case around equal dates
 3. Radio button accessibility
 
 ### `StockList.tsx`
+
 1. Avoiding repetition
 2. Unchecking a checkbox
 3. Magic numbers
@@ -350,6 +356,7 @@ Relevant feedback for each was as follows;
 As well as suggesting tests for the defensive coding of line 56 and dealing with some data persistence between tests.
 
 ### `StockChart.tsx`
+
 1. Hadn't tested that things work correctly when the date range or the price option change. Doing the former took care testing line 36 (obvious really).
 2. More testing around adding and removing tickers, including adding 2 or more.
 3. Handing the if statements around the `newTicker` and `removedTicker` actions.
@@ -398,3 +405,68 @@ await act(async () => {
 ```
 
 which also worked so I'll go with that instead.
+
+## 2025-12-17
+
+Figured, after my travails with testing ReactToolkit, that it was time to look at mock service workers using [mswjs]](https://mswjs.io/). Deciding to ease myself in gently I went back to the version of this project which uses old skool redux. I then made the fatal mistake of installing v2 and found myself in configuration hell.
+
+It all started so well with updating the `handlers.ts` and `server.ts` files to match what was in the quick setup guide and then adding the following to `jest.setup.ts`:
+
+```
+import { server } from "./mocks/server";
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+```
+
+So far, so simple. So far, so wrong.
+
+I ended up installing a host of other packages, including but not limited to: `ts-node`, `ts-jest`, `jest` (explicitly so even though is already there via ` create-react-app`), `jest-environment-jsdom` and `jest-fixed-jsdom` with a `jest.config.ts` file (referenced in `package.json` as `"test": "react-scripts test --config jest.config.js"`) something like this
+
+```
+import type { Config } from "jest";
+import { createDefaultPreset } from 'ts-jest'
+
+const config: Config = {
+  ...createDefaultPreset(),
+  transform: {
+    "^.+\\.(t)s$": "ts-jest",
+    "^.+\\.(js|jsx)$": "babel-jest",
+  },
+  collectCoverage: true,
+  collectCoverageFrom: ["src/**/*.{ts,tsx}"],
+  coverageDirectory: "coverage",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  testEnvironment: "jest-fixed-jsdom"
+};
+
+export default config;
+```
+
+before I gave up and started over.
+
+Keeping the updated files and the updated `msw` package, I tried to include my jest setup file via `setupTest.ts`, viz:
+
+```
+import "@testing-library/jest-dom";
+{
+  "setupFilesAfterEnv": ["<rootDir>/src/jest.config.js"]
+}
+```
+
+but that got me nowhere. Claude told me this was wrong and to move what I had in my setup file in to `setupTests.ts`. Which moved me on to this error:
+
+```
+Test suite failed to run
+ReferenceError: TextEncoder is not defined
+```
+
+I had seen a [solution](https://mswjs.io/docs/migrations/1.x-to-2.x#requestresponsetextencoder-is-not-defined-jest) earlier in the day when I was falling down a rabbit hold of dependencies but didn't recall it so Claude and I ended up in a merry go around of trying to polyfill `TextEncoder` without getting anywhere before realising that the latest version of `msw` was to blame (which it was) and that I should go back to using v1. I did, once I'd found that aforementioned solution again, try to do that but I once again ended up in dependency hell so gave up. One to come back to as and when I hit 'eject' on `create-react-app`.
+
+## 2025-12-18
+
+With the setup in place moving from using Jest to MSW was generally simply (we'll ignore the hour or so I wasted chasing my tail thanks to code blindness). What I learnt:
+
+1. MSW for HTTP interactions/network requests, Jest for everything else. Simple enough but I spent some time trying to figure out how to test a non-network error before I was disabused of the idea.
+2. I [shouldn't do assertion tests](https://mswjs.io/docs/best-practices/avoid-request-assertions/) like `expect(url).toHaveBeenLastCalledWith()` on intercepted requests.

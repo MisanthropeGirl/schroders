@@ -1,10 +1,10 @@
-import { ChangeEvent, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from '@mui/material';
-import { POLYGON_LIST_URL } from '../../constants';
-import { selectSelectedTickers } from '../../selectors';
-import { dataFetch } from '../../utilities';
-import { setSelectedTickers } from '../../actions';
+import { ChangeEvent, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Table, TableHead, TableCell, TableRow, TableBody, Checkbox } from "@mui/material";
+import { POLYGON_LIST_URL } from "../../constants";
+import { selectSelectedTickers } from "../../selectors";
+import { dataFetch } from "../../utilities";
+import { setSelectedTickers } from "../../actions";
 
 function StockList() {
   const [data, setData] = useState<Stock[]>([]);
@@ -13,41 +13,36 @@ function StockList() {
 
   const selectedTickers = useSelector(selectSelectedTickers);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const stockList = await dataFetch(
-          POLYGON_LIST_URL,
-          {
-            market: 'stocks',
-            type: 'CS',
-            exchange: 'XNYS',
-            active: true,
-            order: 'asc',
-            limit: 100,
-            sort: 'ticker'
-          }
-        );
+        const stockList = await dataFetch(POLYGON_LIST_URL, {
+          market: "stocks",
+          type: "CS",
+          exchange: "XNYS",
+          active: true,
+          order: "asc",
+          limit: 100,
+          sort: "ticker",
+        });
         setData(stockList.results);
         setError(false);
-      }
-      catch (err: unknown) {
+      } catch (err: unknown) {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError('There was an error. Please refer to the console.');
+          setError("There was an error. Please refer to the console.");
         }
-        setData([])
-      }
-      finally {
+        setData([]);
+      } finally {
         setLoading(false);
       }
-    }
+    };
 
     loadData();
-  }, [])
+  }, []);
 
   const handleClickEvent = (e: ChangeEvent<HTMLInputElement>): void => {
     const ticker = e.target.value;
@@ -64,24 +59,31 @@ function StockList() {
   if (loading) {
     return <div>Loading table</div>;
   }
-  
+
   if (error) {
-    return (<div>{error}</div>);
-  } 
+    return <div>{error}</div>;
+  }
 
   return (
     // In the real world there would probably be fewer rows on show at any time
     // And there'd be pagination
     // And likely some price data
-    <Table size='small' stickyHeader data-testid='stocklist'>
+    <Table size="small" stickyHeader data-testid="stocklist">
       <TableHead>
         <TableRow>
-          <TableCell variant='head'></TableCell>
-          <TableCell align='left' variant='head'>Ticker</TableCell>
-          <TableCell align='left' variant='head'>Name</TableCell>
-          <TableCell align='left' variant='head'>Exchange</TableCell>
-          <TableCell align='left' variant='head'>Currency</TableCell>
-
+          <TableCell variant="head"></TableCell>
+          <TableCell align="left" variant="head">
+            Ticker
+          </TableCell>
+          <TableCell align="left" variant="head">
+            Name
+          </TableCell>
+          <TableCell align="left" variant="head">
+            Exchange
+          </TableCell>
+          <TableCell align="left" variant="head">
+            Currency
+          </TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -92,7 +94,7 @@ function StockList() {
                 <Checkbox
                   value={stock.ticker}
                   disabled={selectedTickers.length > 2 && !selectedTickers.includes(stock.ticker)}
-                  slotProps={{input: { 'aria-label': `Select ${stock.ticker}` }}}
+                  slotProps={{ input: { "aria-label": `Select ${stock.ticker}` } }}
                   onChange={handleClickEvent}
                 />
               </TableCell>
@@ -101,7 +103,7 @@ function StockList() {
               <TableCell>{stock.primary_exchange}</TableCell>
               <TableCell>{stock.currency_name?.toUpperCase()}</TableCell>
             </TableRow>
-          )
+          );
         })}
       </TableBody>
     </Table>
