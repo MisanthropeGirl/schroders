@@ -507,3 +507,24 @@ It turned out that the 'mistake' was using `axios(url)` rather than `axios.get(u
 After that all of the happy path tests fell in to place but a couple of the fail path ones needed a bit more tweaking.
 
 Since `axios` will take any parameters as an object I no longer need to stringify them myself so I can remove the `convertObjectToString` function and everything associated with it.
+
+## 2025-12-22
+
+So axios and MSW don't always get on too well. In the `dataFetch` tests in `utilities/index.ts` MSW was overriding my axios mock because `setupTests.ts` chucks MSW at all tests. Disabling MSW in that file
+
+```
+beforeAll(() => server.close());
+afterAll(() => server.listen());
+```
+
+led to the real APIs being called instead of the mocks. Claude said that:
+
+> The problem is that jest.mock("axios") creates an automock, but MSW v1 operates at a lower level (Node's http module) and intercepts requests before axios mocks can take effect. The automock isn't complete enough to prevent the actual request.
+>
+> You need to provide a manual mock implementation for axios.
+
+But doing so resulted in the axios response always being undefined.
+
+At this point I figured it was easier to remove the MSW setup from `setupTests.ts` and put it in to my two component test files. Obviously this wouldn't be feasible if I had too many components that did data access.
+
+The switch to MSW on this branch has also lead to the coverage report once again saying that the line in `StockChart.tsx` where I replace any previous data for a ticker is uncovered but there are no changes to the component on this branch nor have any tests been removed.

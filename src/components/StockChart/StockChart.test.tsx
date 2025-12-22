@@ -1,11 +1,10 @@
 import { rest } from "msw";
 import StockChart from "./StockChart";
-import { act, render, screen, waitFor, waitForElementToBeRemoved } from "../../test-utils";
+import { act, render, screen, waitForElementToBeRemoved } from "../../test-utils";
 import { setChartPricingOption, setFromDate, setSelectedTickers } from "../../actions";
 import { DATE_MIDDLE, POLYGON_DATA_URL } from "../../constants";
-import { A, A_DATE_RANGE, AA, AAM } from "../../mocks/Stocks";
-import * as utilities from "../../utilities";
 import { server } from "../../mocks/server";
+import * as utilities from "../../utilities";
 
 // Mock Highcharts
 jest.mock("highcharts", () => ({}));
@@ -14,6 +13,15 @@ jest.mock("highcharts-react-official", () => ({
 }));
 
 describe("StockChart", () => {
+  beforeAll(() => server.listen());
+
+  afterEach(() => {
+    server.resetHandlers();
+    jest.restoreAllMocks();
+  });
+
+  afterAll(() => server.close());
+
   test("it renders without crashing", () => {
     render(<StockChart />);
   });
@@ -72,10 +80,7 @@ describe("StockChart", () => {
     });
 
     await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
-
-    await waitFor(() => {
-      expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
   });
 
   test("it should display chart when there are multiple tickers", async () => {
@@ -109,11 +114,7 @@ describe("StockChart", () => {
     });
 
     await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
-
-    await waitFor(() => {
-      const chart = screen.queryByTestId("stockchart");
-      expect(chart).toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
 
     act(() => store.dispatch(setSelectedTickers("A")));
 
@@ -189,11 +190,7 @@ describe("StockChart", () => {
     });
 
     await waitForElementToBeRemoved(() => screen.queryByText("Awaiting data"));
-
-    await waitFor(() => {
-      const chart = screen.queryByTestId("stockchart");
-      expect(chart).toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("stockchart")).toBeInTheDocument();
 
     act(() => store.dispatch(setChartPricingOption("High")));
 

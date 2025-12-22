@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import StockList from "./StockList";
-import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from "../../test-utils";
+import { fireEvent, render, screen, waitForElementToBeRemoved } from "../../test-utils";
 import { POLYGON_LIST_URL } from "../../constants";
 import { server } from "../../mocks/server";
 import {
@@ -13,26 +13,33 @@ import {
 import * as utilities from "../../utilities";
 
 describe("StockList", () => {
+  beforeAll(() => server.listen());
+
+  afterEach(() => {
+    server.resetHandlers();
+    jest.restoreAllMocks();
+  });
+
+  afterAll(() => server.close());
+
   test("it renders without crashing", async () => {
     render(<StockList />);
 
     await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
     expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.queryByTestId("stocklist")).toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("stocklist")).toBeInTheDocument();
   });
 
   test("it should display a table when the data fetch succeeds", async () => {
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
     const table: HTMLTableElement = screen.getByTestId("stocklist");
 
     expect(table.tBodies[0].rows.length).toEqual(stockList.length);
-    expect(table.getElementsByTagName("input").length).toEqual(stockList.length);
+    expect(screen.getAllByRole("checkbox").length).toEqual(stockList.length);
   });
 
   test("it should display an empty table when the data fetch succeeds but there is an empty array", async () => {
@@ -44,12 +51,12 @@ describe("StockList", () => {
 
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
     const table: HTMLTableElement = screen.getByTestId("stocklist");
 
     expect(table.tBodies[0].rows.length).toEqual(0);
-    expect(table.getElementsByTagName("input").length).toEqual(0);
   });
 
   test("it should display an empty table when the data fetch succeeds but there is no data", async () => {
@@ -61,12 +68,12 @@ describe("StockList", () => {
 
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
     const table: HTMLTableElement = screen.getByTestId("stocklist");
 
     expect(table.tBodies[0].rows.length).toEqual(0);
-    expect(table.getElementsByTagName("input").length).toEqual(0);
   });
 
   test("it should display an error message when data fetch fails with Error", async () => {
@@ -109,7 +116,8 @@ describe("StockList", () => {
 
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
     const table: HTMLTableElement = screen.getByTestId("stocklist");
     expect(table).toBeInTheDocument();
@@ -120,10 +128,10 @@ describe("StockList", () => {
     const user = userEvent.setup();
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
-    const table: HTMLTableElement = screen.getByTestId("stocklist");
-    const checkboxes = table.getElementsByTagName("input");
+    const checkboxes = screen.getAllByRole("checkbox");
 
     await user.click(checkboxes[0]);
     expect(checkboxes[1]).toBeEnabled();
@@ -142,10 +150,10 @@ describe("StockList", () => {
     const user = userEvent.setup();
     const { store } = render(<StockList />);
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
-    const table: HTMLTableElement = screen.getByTestId("stocklist");
-    const checkboxes = table.getElementsByTagName("input");
+    const checkboxes = screen.getAllByRole("checkbox");
 
     // Check then uncheck
     await user.click(checkboxes[0]);
@@ -158,7 +166,8 @@ describe("StockList", () => {
   test("checkboxes have accessible labels", async () => {
     render(<StockList />);
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
     // Each checkbox should be associated with the ticker
     const firstCheckbox = screen.getByRole("checkbox", { name: "Select A" });
@@ -173,16 +182,16 @@ describe("StockList", () => {
       },
     });
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
-    const table: HTMLTableElement = screen.getByTestId("stocklist");
-    const checkboxes = table.getElementsByTagName("input");
+    const checkboxes = screen.getAllByRole("checkbox");
 
     expect(store.getState().selectedTickers).toHaveLength(3);
     expect(checkboxes[3]).toBeDisabled();
 
     // Try to click it anyway (userEvent will allow this)
-    // The onChange handler should hit the if statement, discover the lack of an else banch and do nothing
+    // The onChange handler should hit the if statement, discover the lack of an else branch and do nothing
     try {
       await user.click(checkboxes[3]);
     } catch (e) {
@@ -199,10 +208,10 @@ describe("StockList", () => {
       },
     });
 
-    await waitFor(() => screen.getByTestId("stocklist"));
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
 
-    const table: HTMLTableElement = screen.getByTestId("stocklist");
-    const checkboxes = table.getElementsByTagName("input");
+    const checkboxes = screen.getAllByRole("checkbox");
 
     expect(store.getState().selectedTickers).toHaveLength(3);
 
