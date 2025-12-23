@@ -13,15 +13,6 @@ jest.mock("highcharts-react-official", () => ({
 }));
 
 describe("StockChart", () => {
-  beforeAll(() => server.listen());
-
-  afterEach(() => {
-    server.resetHandlers();
-    jest.restoreAllMocks();
-  });
-
-  afterAll(() => server.close());
-
   test("it renders without crashing", () => {
     render(<StockChart />);
   });

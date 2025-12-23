@@ -19,9 +19,9 @@ import { stockDataApiResponse } from "./Stocks";
 
 export const handlers = [
   rest.get(POLYGON_LIST_URL, (_req, res, ctx) => {
-    return res(ctx.json(stockListApiOutput));
+    return res(ctx.delay(100), ctx.json(stockListApiOutput));
   }),
   rest.get(`${POLYGON_DATA_URL}/:ticker/range/1/day/:from/:to`, (_req, res, ctx) => {
-    return res(ctx.json(stockDataApiResponse));
+    return res(ctx.delay(100), ctx.json(stockDataApiResponse));
   }),
 ];

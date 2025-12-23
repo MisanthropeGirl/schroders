@@ -13,15 +13,6 @@ import {
 import * as utilities from "../../utilities";
 
 describe("StockList", () => {
-  beforeAll(() => server.listen());
-
-  afterEach(() => {
-    server.resetHandlers();
-    jest.restoreAllMocks();
-  });
-
-  afterAll(() => server.close());
-
   test("it renders without crashing", async () => {
     render(<StockList />);
 

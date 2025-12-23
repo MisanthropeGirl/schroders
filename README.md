@@ -291,7 +291,7 @@ Ignoring the occasional 'no need to test this, it is trivial' _cough_ actions _c
 1. Utilities: What if the JSON response is invalid?
 2. Reducers: What if the action doesn't match any of the options?
 3. Reducers: What if the state is undefined?
-4. Reducesr: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
+4. Reducers: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
 5. Selectors: Null/undefined state handling
 6. Selectors: Empty selectedTickers
 
@@ -462,7 +462,7 @@ Test suite failed to run
 ReferenceError: TextEncoder is not defined
 ```
 
-I had seen a [solution](https://mswjs.io/docs/migrations/1.x-to-2.x#requestresponsetextencoder-is-not-defined-jest) earlier in the day when I was falling down a rabbit hold of dependencies but didn't recall it so Claude and I ended up in a merry go around of trying to polyfill `TextEncoder` without getting anywhere before realising that the latest version of `msw` was to blame (which it was) and that I should go back to using v1. I did, once I'd found that aforementioned solution again, try to do that but I once again ended up in dependency hell so gave up. One to come back to as and when I hit 'eject' on `create-react-app`.
+I had seen a [solution](https://mswjs.io/docs/migrations/1.x-to-2.x#requestresponsetextencoder-is-not-defined-jest) earlier in the day when I was falling down a rabbit hold of dependencies but didn't recall it so Claude and I ended up in a merry go around of trying to polyfill `TextEncoder` without getting anywhere before realising that the latest version of MSW was to blame (which it was) and that I should go back to using v1. I did, once I'd found that aforementioned solution again, try to do that but I once again ended up in dependency hell so gave up. One to come back to as and when I hit 'eject' on `create-react-app`.
 
 ## 2025-12-18
 
@@ -508,7 +508,7 @@ After that all of the happy path tests fell in to place but a couple of the fail
 
 Since `axios` will take any parameters as an object I no longer need to stringify them myself so I can remove the `convertObjectToString` function and everything associated with it.
 
-## 2025-12-22
+## 2025-12-22 (1)
 
 So axios and MSW don't always get on too well. In the `dataFetch` tests in `utilities/index.ts` MSW was overriding my axios mock because `setupTests.ts` chucks MSW at all tests. Disabling MSW in that file
 
@@ -528,3 +528,9 @@ But doing so resulted in the axios response always being undefined.
 At this point I figured it was easier to remove the MSW setup from `setupTests.ts` and put it in to my two component test files. Obviously this wouldn't be feasible if I had too many components that did data access.
 
 The switch to MSW on this branch has also lead to the coverage report once again saying that the line in `StockChart.tsx` where I replace any previous data for a ticker is uncovered but there are no changes to the component on this branch nor have any tests been removed.
+
+## 2025-12-22 (2)
+
+Some further searching bought the `axios-mock-adapter` package to my attention. By using this I could restore MSW to being global and replace the jest mocking of axios for all but one test ('it handles no response being received') as, like with MSW, axios doesn't deal with not network errors (which, again, is not particularly surprising).
+
+The solution for the remergence of the `StockChart.tsx` coverage issue turned out to be adding a delay to that endpoint's handler in order to simulate the network latency. Once that was done all was good again.

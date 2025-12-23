@@ -1,23 +1,19 @@
 import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
 import { dataFetch, dataTransform } from ".";
 import { POLYGON_LIST_URL, PRICE_SERIES_CODES } from "../constants";
 import { stockList } from "../mocks/StockList";
 import { A_CHART_DATA, A_RAW_CHART_DATA } from "mocks/Stocks";
 
-jest.mock("axios");
-
 describe("dataFetch", () => {
-  const mockedAxios = axios as jest.Mocked<typeof axios>;
+  const mockedAxios = new AxiosMockAdapter(axios);
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   test("it handles successful API calls", async () => {
-    mockedAxios.get.mockResolvedValue({
-      status: 200,
-      data: stockList,
-    });
+    mockedAxios.onGet(POLYGON_LIST_URL).replyOnce(200, stockList);
 
     // Make API call
     const data = await dataFetch(POLYGON_LIST_URL, {});
@@ -27,50 +23,45 @@ describe("dataFetch", () => {
   });
 
   test("it handles empty response body", async () => {
-    mockedAxios.get.mockResolvedValue({
-      status: 200,
-      data: null,
-    });
+    mockedAxios.onGet(POLYGON_LIST_URL).replyOnce(200, null);
 
     const data = await dataFetch(POLYGON_LIST_URL, {});
     expect(data).toBeNull();
   });
 
   test("it handles unsuccessful API calls", async () => {
-    mockedAxios.get.mockRejectedValue({
-      response: {
-        status: 404,
-      },
-    });
+    mockedAxios.onGet(POLYGON_LIST_URL).replyOnce(404);
 
-    // Verify error handling
-    await expect(dataFetch(`${POLYGON_LIST_URL}a`, {})).rejects.toThrow("HTTP error: Status 404");
-  });
-
-  test("it handles no response being received", async () => {
-    mockedAxios.get.mockRejectedValue({
-      request: "No response received",
-    });
-
-    // Verify error handling
-    await expect(dataFetch(`${POLYGON_LIST_URL}a`, {})).rejects.toThrow("No response received");
+    await expect(dataFetch(POLYGON_LIST_URL, {})).rejects.toThrow("HTTP error: Status 404");
   });
 
   test("it handles API errors", async () => {
-    // Mock network error
-    mockedAxios.get.mockRejectedValue(new Error("Network error"));
+    mockedAxios.onGet(POLYGON_LIST_URL).networkErrorOnce();
 
-    // Verify error handling
-    await expect(dataFetch(POLYGON_LIST_URL, {})).rejects.toThrow("Network error");
+    await expect(dataFetch(POLYGON_LIST_URL, {})).rejects.toThrow("Network Error");
   });
 
   test("it handles invalid JSON response", async () => {
-    mockedAxios.get.mockResolvedValue({
-      status: 200,
-      data: new Error("Invalid JSON"),
+    mockedAxios.onGet(POLYGON_LIST_URL).reply(_config => {
+      return [200, "Invalid JSON"];
     });
 
-    await expect(dataFetch(POLYGON_LIST_URL, {})).resolves.toThrow("Invalid JSON");
+    await expect(dataFetch(POLYGON_LIST_URL, {})).resolves.toBe("Invalid JSON");
+  });
+
+  // Need to bypass the mock axios adapter for this test and mock axios in Jest
+  // since axios-mock-adapter cannot simulate this scenario
+  test("it handles no response being received", async () => {
+    mockedAxios.restore();
+
+    const axiosSpy = jest.spyOn(axios, "get").mockRejectedValueOnce({
+      request: "No response received",
+      config: {},
+    });
+
+    await expect(dataFetch(POLYGON_LIST_URL, {})).rejects.toThrow("No response received");
+
+    axiosSpy.mockRestore();
   });
 });
 

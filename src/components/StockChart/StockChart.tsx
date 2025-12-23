@@ -33,8 +33,8 @@ function StockChart() {
         sort: "asc",
       });
 
-      const tickerIndex = data.findIndex(it => it.ticker === ticker);
       setData(draft => {
+        const tickerIndex = draft.findIndex(it => it.ticker === ticker);
         if (tickerIndex > -1) {
           draft[tickerIndex].data = stockData.results;
         } else {
