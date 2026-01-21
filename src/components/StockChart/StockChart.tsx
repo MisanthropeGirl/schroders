@@ -20,21 +20,13 @@ function StockChart() {
 
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
-  const { chartData, fetchErrors, isError, error } = useStockChartData(
+  const { chartData, fetchErrors } = useStockChartData(
     selectedStocks,
     chartTickers,
     fromDate,
     toDate,
     ticker => dispatch(tickersUpdated(ticker)),
   );
-
-  if (isError) {
-    return (
-      <div className="chart">
-        <div className="chartMsg">{error!.toString()}</div>
-      </div>
-    );
-  }
 
   if (chartTickers.length === 0 && Object.keys(fetchErrors).length === 0) {
     return (

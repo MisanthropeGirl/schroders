@@ -1,6 +1,6 @@
 {
   "name": "schroders",
-  "version": "0.5.13",
+  "version": "0.5.14",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -55,6 +55,7 @@
     "@types/react-redux": "^7.1.34",
     "@types/redux": "^3.6.0",
     "ajv": "^8.17.1",
+    "msw": "^1.3.5",
     "typescript": "^4.9.5"
   },
   "jest": {

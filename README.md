@@ -556,9 +556,9 @@ There are two lines which the coverage reports says are untested:
 
 Answers:
 
-1. Firstly, with help, I did away logging the error to the console (which avoided some unnecessary logic to spy on the console) and shifted to displaying it to screen. I couldn't work out how to within what I already had, except for the horrible option of trying to mutate the `result` object, and didn't think about using a new piece of component state. Blame a brain fade, tiredness, code blindness or general stupidity. Once that was done and I'd been reminded of Jest's rejection methods the necessary tests ame easily enough.
+1. Firstly, with help, I did away logging the error to the console (which avoided some unnecessary logic to spy on the console) and shifted to displaying it to screen. I couldn't work out how to within what I already had, except for the horrible option of trying to mutate the `result` object, and didn't think about using a new piece of component state. Blame a brain fade, tiredness, code blindness or general stupidity. Once that was done and I'd been reminded of Jest's rejection methods the necessary tests came easily enough.
 
-2. Claude said this is because I'm mocking the hook so this piece of configuration is not touched. It also said not to bother wasting my time with it here, pointing out that i'd be better off dealing with it via integration testing and mock service workers - which I think have to be the next item on the agenda.
+2. Claude said this is because I'm mocking the hook so this piece of configuration is not touched. It also said not to bother wasting my time with it here, pointing out that I'd be better off dealing with it via integration testing and mock service workers - which I think have to be the next item on the agenda.
 
 ## 2025-12-15
 
@@ -573,3 +573,77 @@ The pagination feels like it would be an ideal use case for the [`useInfiniteQue
 Added the `preferCacheValue` parameter to the trigger function of the `useLazyQuery` hook since the documentation says that that'll return a cached value if one exists (since `useLazyQuery` otherwise always sends a new request to the server).
 
 Extracted the code which fetches the chart data in to its own hook.
+
+## 2026-01-20
+
+Added MSW to this branch. Copied the setup files over from the old skool redux branch and stripped out the Jest mocking from the component tests. Aside from having to check how to return multiple responses as chaining didn't seem to be an option all went well until I got to the error handling.
+
+I'd updated the `StockList.tsx` error handling based on [the example](https://redux-toolkit.js.org/rtk-query/usage-with-typescript#type-safe-error-handling) in the docs but wasn't sure how to test. Turns out I simply needed to over ride the mock locally like so:
+
+```
+server.use(
+  rest.get(POLYGON_LIST_URL, (_req, res, ctx) => {
+    return res.once(ctx.status(404));
+  }),
+);
+```
+
+This just left one line `return <div>{error.message}</div>;` uncovered but Claude said it was more hassle than it wass worth to do so - but did provide a test which almost worked. I just needed to add a property to the returned object and all was fine. The coverage report then said that one line was only partially covered. An issue for tomorrow.
+
+As above, it was the error handling which is giving me problems on `StockChart.tsx` with the inline error handling isn't being reached with all error tests coming back with `isError` being true. After some back and forth with Claude it was suggested that it would be better to remove that path and just stick to the inline error handling.
+
+Which sorted that out but left me with a partially uncovered line in the hook:
+
+`[ticker]: error instanceof Error ? error.message : "Failed to fetch data"`
+
+In order to get full coverage a test file was created for the hook. Possibly should have had that last year but the coverage report wasn't showing any issues then. An advantage (or otherwise) of switching to MSW from Jest mocking?
+
+## 2026-01-21
+
+Realised that I should have been testing the hook directly rather than via `StockChart.tsx` so commented out most of that files tests to see what needed covering and went from there.
+
+I managed to test the initial data fetch and transformation but got stuck on what to do if the dates changed. Calling the hook twice didn't look like it would work (it didn't). The solution was to return `rerender` from `renderHook` and pass the data to the hook via props rather than directly, i.e.
+
+```
+renderHook(
+  ({ selectedStocks, chartTickers, fromDate, toDate }) =>
+    useStockChartData(selectedStocks, chartTickers, fromDate, toDate, onTickerUpdate),
+  {
+    initialProps: {
+      selectedStocks: ["A"],
+      chartTickers: [] as string[],
+      fromDate: DATE_MIN,
+      toDate: DATE_MAX,
+    },
+  },
+)
+```
+
+rather than
+
+```
+renderHook(() =>
+  useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
+)
+```
+
+and then just do this when I want to change things
+
+```
+rerender({
+  selectedStocks: ["A"],
+  chartTickers: ["A"],
+  fromDate: DATE_MIDDLE,
+  toDate: DATE_MAX,
+});
+```
+
+Given that I could then write the final test to check data removal.
+
+This left only the following line in `StockList.tsx` which is not fully covered by my tests:
+
+```
+const errMsg = "error" in error ? error.error : JSON.stringify(error.data);
+```
+
+I wondered if it was possible to fully test this line. The answer is yes but not with MSW. I figured that it couldn't be done with MSW but failed then to make the jump back to using JEST mocking. As a result I how have some repetitive code at the start of several tests which I tried, with out any success, to move to a `beforeEach()` block. Will ask Claude when my message limit resets.

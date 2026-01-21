@@ -150,6 +150,7 @@ export const stockListApiOutput: StockListApiResponse = {
 
 export const stockListApiOutput2: StockListApiResponse = {
   ...stockListApiOutput,
+  count: 5,
   results: stockList.slice(5),
 };
 
@@ -157,4 +158,9 @@ export const stockListApiOutputEmpty: StockListApiResponse = {
   ...stockListApiOutput,
   count: 0,
   results: [],
+};
+
+export const stockListApiOutputMissingCurrency: StockListApiResponse = {
+  ...stockListApiOutput,
+  results: [{ ...stockList[0], currency_name: undefined }],
 };

@@ -1,8 +1,4 @@
-import {
-  PRICE_SERIES_CODES,
-  chartPriceOptions,
-  createInitialChartDataState,
-} from "../constants";
+import { PRICE_SERIES_CODES, chartPriceOptions, createInitialChartDataState } from "../constants";
 import { dataTransform } from "../utilities";
 
 export const A: StockData[] = [
@@ -108,17 +104,14 @@ export const A: StockData[] = [
   },
 ];
 
-export const A_CHART_DATA: Record<string, TransformedData[]> =
-  createInitialChartDataState();
+export const A_CHART_DATA: Record<string, TransformedData[]> = createInitialChartDataState();
 chartPriceOptions.forEach(option => {
   A_CHART_DATA[option].push({
     type: "line",
     name: "A",
     data: dataTransform(
       A,
-      PRICE_SERIES_CODES[
-        option.toUpperCase() as keyof typeof PRICE_SERIES_CODES
-      ],
+      PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES],
     ),
   });
 });
@@ -128,14 +121,12 @@ export const A_DATE_RANGE: StockData[] = A.slice(3, 6);
 export const A_DATE_RANGE_CHART_DATA: Record<string, TransformedData[]> =
   createInitialChartDataState();
 chartPriceOptions.forEach(option => {
-  A_CHART_DATA[option].push({
+  A_DATE_RANGE_CHART_DATA[option].push({
     type: "line",
     name: "A",
     data: dataTransform(
       A_DATE_RANGE,
-      PRICE_SERIES_CODES[
-        option.toUpperCase() as keyof typeof PRICE_SERIES_CODES
-      ],
+      PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES],
     ),
   });
 });
@@ -148,8 +139,13 @@ export const stockDataApiOutput: StockDataApiResponse = {
   count: 250,
   queryCount: 250,
   request_id: "889d3e0da427f16f9ed52e0ae83f7e8f",
-  results: [],
+  results: A,
   resultsCount: 250,
   status: "DELAYED",
-  ticker: "AAP",
+  ticker: "A",
+};
+
+export const stockDataApiOutputDateChanged: StockDataApiResponse = {
+  ...stockDataApiOutput,
+  results: A_DATE_RANGE,
 };
