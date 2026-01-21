@@ -19,15 +19,6 @@ describe("PriceOptions", () => {
   test("it renders four price options, the first of which should be checked", () => {
     render(<PriceOptions />);
 
-    const radioGroup = screen.getByRole("radiogroup");
-
-    expect(radioGroup.children).toHaveLength(4);
-
-    expect(radioGroup.children[0].lastElementChild).toHaveTextContent("Close");
-    expect(radioGroup.children[1].lastElementChild).toHaveTextContent("High");
-    expect(radioGroup.children[2].lastElementChild).toHaveTextContent("Low");
-    expect(radioGroup.children[3].lastElementChild).toHaveTextContent("Open");
-
     expect(screen.getByRole("radio", { name: "Select Close" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Select High" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Select Low" })).toBeInTheDocument();

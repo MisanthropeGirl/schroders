@@ -48,17 +48,21 @@ describe("DateSelector", () => {
 
     const fromDate = screen.getByTestId("from-date");
 
-    expect(screen.queryByText(`Date should between ${DATE_MIN} and ${DATE_MAX}`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(`Date should between ${DATE_MIN} and ${DATE_MAX}`),
+    ).not.toBeInTheDocument();
 
     await user.clear(fromDate);
     await user.type(fromDate, "1999-12-31");
 
-    expect(screen.queryByText(`Date should between ${DATE_MIN} and ${DATE_MAX}`)).toBeInTheDocument();
+    expect(screen.getByText(`Date should between ${DATE_MIN} and ${DATE_MAX}`)).toBeInTheDocument();
 
     await user.clear(fromDate);
     await user.type(fromDate, DATE_MIN);
 
-    expect(screen.queryByText(`Date should between ${DATE_MIN} and ${DATE_MAX}`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(`Date should between ${DATE_MIN} and ${DATE_MAX}`),
+    ).not.toBeInTheDocument();
   });
 
   test("it should throw a min date is after max date error", async () => {
@@ -67,17 +71,21 @@ describe("DateSelector", () => {
     const fromDate = screen.getByTestId("from-date");
     const toDate = screen.getByTestId("to-date");
 
-    expect(screen.queryByText("The from date should be before the to date")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("The from date should be before the to date"),
+    ).not.toBeInTheDocument();
 
     await user.clear(fromDate);
     await user.type(fromDate, DATE_MAX);
 
-    expect(screen.queryByText("The from date should be before the to date")).toBeInTheDocument();
+    expect(screen.getByText("The from date should be before the to date")).toBeInTheDocument();
 
     await user.clear(fromDate);
     await user.type(fromDate, DATE_MIN);
 
-    expect(screen.queryByText("The from date should be before the to date")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("The from date should be before the to date"),
+    ).not.toBeInTheDocument();
 
     await user.clear(toDate);
     await user.type(toDate, DATE_MIDDLE);
@@ -85,12 +93,14 @@ describe("DateSelector", () => {
     await user.clear(fromDate);
     await user.type(fromDate, DATE_MIDDLE_PLUS_ONE_DAY);
 
-    expect(screen.queryByText("The from date should be before the to date")).toBeInTheDocument();
+    expect(screen.getByText("The from date should be before the to date")).toBeInTheDocument();
 
     await user.clear(fromDate);
     await user.type(fromDate, DATE_MIDDLE_MINUS_ONE_DAY);
 
-    expect(screen.queryByText("The from date should be before the to date")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("The from date should be before the to date"),
+    ).not.toBeInTheDocument();
   });
 
   test("it should throw a max date is before min date error", async () => {
@@ -104,7 +114,7 @@ describe("DateSelector", () => {
     await user.clear(toDate);
     await user.type(toDate, DATE_MIN);
 
-    expect(screen.queryByText("The to date should be after the from date")).toBeInTheDocument();
+    expect(screen.getByText("The to date should be after the from date")).toBeInTheDocument();
 
     await user.clear(toDate);
     await user.type(toDate, DATE_MAX);
@@ -117,7 +127,7 @@ describe("DateSelector", () => {
     await user.clear(toDate);
     await user.type(toDate, DATE_MIDDLE_MINUS_ONE_DAY);
 
-    expect(screen.queryByText("The to date should be after the from date")).toBeInTheDocument();
+    expect(screen.getByText("The to date should be after the from date")).toBeInTheDocument();
 
     await user.clear(toDate);
     await user.type(toDate, DATE_MIDDLE_PLUS_ONE_DAY);
@@ -164,7 +174,9 @@ describe("DateSelector", () => {
     await user.type(fromDate, DATE_MIDDLE);
 
     expect(store.getState().dates.fromDate).toBe(DATE_MIDDLE);
-    expect(screen.queryByText("The from date should be before the to date")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("The from date should be before the to date"),
+    ).not.toBeInTheDocument();
   });
 
   test("it updates toDate in store when valid date is entered", async () => {
@@ -210,6 +222,8 @@ describe("DateSelector", () => {
     // Now BOTH dates should be in Redux
     expect(store.getState().dates.fromDate).toBe(DATE_MIDDLE_PLUS_ONE_DAY);
     expect(store.getState().dates.toDate).toBe(DATE_MAX);
-    expect(screen.queryByText("The from date should be before the to date")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("The from date should be before the to date"),
+    ).not.toBeInTheDocument();
   });
 });

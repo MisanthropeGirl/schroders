@@ -10,7 +10,7 @@ export function useStockChartData(
   toDate: string,
   onTickerUpdate: (ticker: string) => void,
 ) {
-  const [getStockData, result] = useLazyGetStockDataQuery();
+  const [getStockData] = useLazyGetStockDataQuery();
   const [chartData, setChartData] = useState<Record<string, TransformedData[]>>(
     createInitialChartDataState(),
   );
@@ -100,7 +100,5 @@ export function useStockChartData(
   return {
     chartData,
     fetchErrors,
-    isError: result.isError,
-    error: result.error,
   };
 }
