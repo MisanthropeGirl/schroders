@@ -647,3 +647,15 @@ const errMsg = "error" in error ? error.error : JSON.stringify(error.data);
 ```
 
 I wondered if it was possible to fully test this line. The answer is yes but not with MSW. I figured that it couldn't be done with MSW but failed then to make the jump back to using JEST mocking. As a result I how have some repetitive code at the start of several tests which I tried, with out any success, to move to a `beforeEach()` block. Will ask Claude when my message limit resets.
+
+## 2026-01-22
+
+After the diversions of adding MSW to the React Toolkit branch (see above) and taking a look at [React Context](https://github.com/MisanthropeGirl/playground-react-context) I have finally been able to move on to looking at Playwright. This time around installing it and running the example test went smoothly. Thank you, new computer. The only change I had to make was to stop eslint treating the Playwright test as as if it were a test file for Jest/React Testing Library which was done via `package.json`.
+
+```
+"eslintConfig": {
+  "ignorePatterns": [
+    "e2e/"
+  ],
+},
+```
