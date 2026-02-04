@@ -1,12 +1,14 @@
 import { ReactElement } from "react";
 import userEvent from "@testing-library/user-event";
-import { addDays, format, subDays } from "date-fns";
 import { render, screen } from "../../test-utils";
-import { DATE_MAX, DATE_MIDDLE, DATE_MIN } from "../../constants";
+import {
+  DATE_MAX,
+  DATE_MIDDLE,
+  DATE_MIDDLE_MINUS_ONE_DAY,
+  DATE_MIDDLE_PLUS_ONE_DAY,
+  DATE_MIN,
+} from "../../constants";
 import DateSelector from "./DateSelector";
-
-const DATE_MIDDLE_PLUS_ONE_DAY = format(addDays(DATE_MIDDLE, 1), "yyyy-MM-dd");
-const DATE_MIDDLE_MINUS_ONE_DAY = format(subDays(DATE_MIDDLE, 1), "yyyy-MM-dd");
 
 // setup function
 function setup(tsx: ReactElement) {

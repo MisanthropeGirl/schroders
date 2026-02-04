@@ -659,3 +659,7 @@ After the diversions of adding MSW to the React Toolkit branch (see above) and t
   ],
 },
 ```
+
+## 2026-01-23
+
+Wrote some basic tests, nothing that required me to mock the APIs. Pretty simply to do, albeit that I was replicating some of what I'd done with the unit/implementation testing so that helped. Found a bug in the date selector component which the unit testing didn't pick up so fixed that.

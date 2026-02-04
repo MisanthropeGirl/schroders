@@ -17,7 +17,7 @@ function DateSelector() {
     const fromDate = fromDateEl?.current?.value || DATE_MIN;
     const toDate = toDateEl?.current?.value || DATE_MAX;
 
-    if (newDate < DATE_MIN || newDate > DATE_MAX) {
+    if (newDate < DATE_MIN || newDate > DATE_MAX || fromDate < DATE_MIN || toDate > DATE_MAX) {
       setDateError(`Date should between ${DATE_MIN} and ${DATE_MAX}`);
     } else if (source === "from" && newDate >= toDate) {
       setDateError("The from date should be before the to date");
