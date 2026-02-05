@@ -663,3 +663,17 @@ After the diversions of adding MSW to the React Toolkit branch (see above) and t
 ## 2026-01-23
 
 Wrote some basic tests, nothing that required me to mock the APIs. Pretty simply to do, albeit that I was replicating some of what I'd done with the unit/implementation testing so that helped. Found a bug in the date selector component which the unit testing didn't pick up so fixed that.
+
+## 2026-02-05
+
+For the want of a `*` API mocking with Playwright got off to a rocky start. The syntax was simple enough - `await page.route(url, async route => {});` - so I dropped the `POLYGON_LIST_URL` constant in there, same as I did for the MSW handler and thought all would be good. Yeah, that was a bad assumption.
+
+Figuring out why the mocking wasn't working wasn't helped by going down the rabbit hole of thinking that the [problem was to do with MSW](https://playwright.dev/docs/network#missing-network-events-and-service-workers). It wasn't until I'd span out a new branch, deleted everything related to them and found that it changed nothing that I stopped digging.
+
+What I needed to do, which is different from MSW is include the wildcard in the URL, i.e. ``await page.route(`${POLYGON_LIST_URL}*`, async route => {});`` rather than ``await page.route(`${POLYGON_LIST_URL}`, async route => {});``. Once that was added then all was fine.
+
+## 2026-02-06
+
+Adding other functionality tests involving thr APIs. Hassle free, even figuring ut how to call the API multiple times within the same test. Nice to know something is. :)
+
+There is one test which refuses to work on Firefox (list.spec.ts:"it loads correctly) but that would seem to be a timing thing with the API completing ahead of the test starting so the 'Loading table' message is never seen. I can live with that.
