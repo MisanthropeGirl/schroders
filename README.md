@@ -4,6 +4,14 @@ My solution may not have gotten me a second interview but I can use this exercis
 
 This is not a read me in the traditional sense but rather a diary of things I learnt/fought with along the way.
 
+## Branches
+
+1. [Redux](https://github.com/MisanthropeGirl/schroders/tree/master) - Old skool redux, using the fetch API, Jest and MSW for testing
+2. [Axios](https://github.com/MisanthropeGirl/schroders/tree/axoios) - Swapping out the fetch API for the Axios library. Branched from 'Redux'.
+3. [Immer](https://github.com/MisanthropeGirl/schroders/tree/immer) - Using [immer](https://immerjs.github.io/immer/) for state updating. Branched from 'Axios'.
+4. [Redux Toolkit](https://github.com/MisanthropeGirl/schroders/tree/redux-toolkit) - Moving to a modern redux implementation, including the use of RTK Query for data fetching. Branched from 'Redux'.
+5. [Playwright](https://github.com/MisanthropeGirl/schroders/tree/playwright) - End to end testing using Playwright. Branched from Redux Toolkit.
+
 ## 2025-10-04
 
 Added old school style Redux (aka what I know thanks to my time at F1000). This is the first time I've done this from scratch (Helen S, Goran N and Igor T did this work for F1000) so it was all about seeing if I actually understood what I thought I did from that time.
