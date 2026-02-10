@@ -1,8 +1,16 @@
 # Schroder's technical test
 
-My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, starting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistence.
+My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, starting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistance.
 
-This is not a read me in the traditional sense but rather a diary of thngs I learnt/fought with along the way.
+This is not a read me in the traditional sense but rather a diary of things I learnt/fought with along the way.
+
+## Branches
+
+1. [Redux](https://github.com/MisanthropeGirl/schroders/tree/master) - Old skool redux, using the fetch API, Jest and MSW for testing
+2. [Axios](https://github.com/MisanthropeGirl/schroders/tree/axoios) - Swapping out the fetch API for the Axios library. Branched from 'Redux'.
+3. [Immer](https://github.com/MisanthropeGirl/schroders/tree/immer) - Using [immer](https://immerjs.github.io/immer/) for state updating. Branched from 'Axios'.
+4. [Redux Toolkit](https://github.com/MisanthropeGirl/schroders/tree/redux-toolkit) - Moving to a modern redux implementation, including the use of RTK Query for data fetching. Branched from 'Redux'.
+5. [Playwright](https://github.com/MisanthropeGirl/schroders/tree/playwright) - End to end testing using Playwright. Branched from Redux Toolkit.
 
 ## 2025-10-04
 
@@ -12,10 +20,9 @@ Bit of a faff (some of which was removing the prop-drilling I had initially gone
 
 The biggest fight I had was with getting Redux DevTools to acknowledge the store. AIUI the lack of middleware in the store in this iteration is the reason for this which is why I've had to [explicitly link them up](https://github.com/zalmoxisus/redux-devtools-extension/blob/master/docs/Recipes.md#using-in-a-typescript-project).
 
-
 ## 2025-10-10
 
-Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistence, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
+Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistance, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
 
 Not knowing where to start, I took the sensible course and went looking to see [how others](https://stackoverflow.com/questions/43044696/test-a-create-react-app-index-js-file) have [gone about it](https://joaoforja.com/blog/how-to-test-a-rect-app-indexjs).
 
@@ -42,6 +49,7 @@ describe("Application root", () => {
 ```
 
 There are two issues
+
 1. VSCode flags a TypeScript error: `TS2339: Property 'render' does not exist on type 'typeof import("/Users/MisanthropeGirl/Websites/interviews/schroders/node_modules/@types/react-dom/index")'`.
 2. `TypeError: tk.CSS?.supports is not a function` on StockChart.tsx (which is the Highcharts import).
 
@@ -66,15 +74,16 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     require("./index.tsx");
-    
+
     expect(createRoot).toHaveBeenCalledWith(div);
   });
 });
 ```
 
 Key Changes:
+
 1. Import from react-dom/client instead of react-dom
 2. Mock createRoot instead of render
 3. createRoot returns an object with render and unmount methods
@@ -126,9 +135,9 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     require("./index.tsx");
-    
+
     expect(createRoot).toHaveBeenCalledWith(div);
   });
 });
@@ -173,14 +182,14 @@ describe("Application root", () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
-    
+
     // Clear any previous calls
     mockCreateRoot.mockClear();
     mockRender.mockClear();
-    
+
     // Now require index.tsx which will use the mocked createRoot
     require("./index.tsx");
-    
+
     expect(mockCreateRoot).toHaveBeenCalledWith(div);
     expect(mockRender).toHaveBeenCalled();
   });
@@ -188,6 +197,7 @@ describe("Application root", () => {
 ```
 
 Key changes:
+
 1. Removed the import of createRoot at the top since you're mocking it
 2. Created mockRender and mockCreateRoot before the mock so you can reference them in your assertions
 3. Clear mocks before the test to ensure clean state
@@ -235,7 +245,7 @@ describe("Application root", () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Create root element
     const root = document.createElement("div");
     root.id = "root";
@@ -250,12 +260,12 @@ describe("Application root", () => {
   it("should render without crashing", () => {
     // Manually execute what index.tsx does
     const rootElement = document.getElementById("root") as HTMLElement;
-    
+
     // Import and execute
     jest.isolateModules(() => {
       require("./index.tsx");
     });
-    
+
     expect(createRoot).toHaveBeenCalledWith(rootElement);
     expect(mockRender).toHaveBeenCalled();
   });
@@ -284,11 +294,12 @@ Mocking the `dataFetch` function so I can unit test it. Apparently I can do this
 
 Got a bit hung up trying to figure out the fail path (`utilities/index.ts:7`) so asked Claude and then asked it to run an eye over what I'd done over the last couple of days.
 
-Ignoring the occasional 'no need to test this, it is trivial' *cough* actions *cough* the helpful feedback was:
+Ignoring the occasional 'no need to test this, it is trivial' _cough_ actions _cough_ the helpful feedback was:
+
 1. Utilities: What if the JSON response is invalid?
 2. Reducers: What if the action doesn't match any of the options?
 3. Reducers: What if the state is undefined?
-4. Reducesr: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
+4. Reducers: Edge cases such as duplicate tickers and persistence of [new|removed]Ticker.
 5. Selectors: Null/undefined state handling
 6. Selectors: Empty selectedTickers
 
@@ -304,7 +315,7 @@ Added basic 'does it render without crashing tests' for each component and start
 
 ## 2025-10-28
 
-Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch tself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
+Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch itself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
 
 Started out using `fireEvent` to simulate the user interactions but was pointed at `userEvent` instead. I understand that this is the better way of emulating them but trying to update inputs with `.type()` (or at least date inputs) requires clearing the input first - although that may just be because of Material UI.
 
@@ -312,7 +323,7 @@ Started out using `fireEvent` to simulate the user interactions but was pointed 
 
 Wrote the tests for `App.tsx` and `StockList.tsx` today. For the former just checking that it renders was enough for full coverage and that worked fine once I'd mocked Highcharts.
 
-All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an elemnt to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [Mock Functions](https://jestjs.io/docs/mock-functions]) part of the Jest documentation but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
+All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an element to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [Mock Functions](https://jestjs.io/docs/mock-functions]) part of the Jest documentation but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
 
 The only line which I have been unable to test fully is line 56 as I can't fake the component in to having enabled checkboxes when the selectedTickers has three items. I did though try and the mock store was updated to include the ability to accept an initial state as a parameter. I could simply delete the offending if statement but it feels like a necessary piece of error checking just in case someone manages to get around Material UI's checkbox disabling.
 
@@ -322,7 +333,7 @@ Wrote the tests for `stockChart.tsx`. Mostly straightforward - except for when I
 
 Moved the `dataTransform` function to `utilities.tsx` so I could test it in isolation.
 
-If I exclude the files added when I was using mock service workers and `reportWebVitals.ts` then overall test coverage is close to 100%. Even with them in it is over 90%. It's mainly the lack of testing for `index.tsx` (see above) which is dragging it down so I'm going to declare myself satisifed wth my efforts. I may tomorrow though run everything through Claude and ask it to point out any potential improvements. After that, it is time to see what integration and end-to-end testing can potentially be applied.
+If I exclude the files added when I was using mock service workers and `reportWebVitals.ts` then overall test coverage is close to 100%. Even with them in it is over 90%. It's mainly the lack of testing for `index.tsx` (see above) which is dragging it down so I'm going to declare myself satisfied wth my efforts. I may tomorrow though run everything through Claude and ask it to point out any potential improvements. After that, it is time to see what integration and end-to-end testing can potentially be applied.
 
 ## 2025-11-01
 
@@ -331,16 +342,19 @@ I have now run the tests for the components and utilities past Claude with the p
 Relevant feedback for each was as follows;
 
 ### `utilities.ts`
+
 1. Handle special cases in `convertObjectToString`. I'm not URL-encoding values as the API documentation didn't mention it.
 2. Handle an empty array being passed to `dataTransform`.
 3. Checking that the object parameters passed to `dataFetch` are in the queryString.
 
 ### `ChartOptions.tsx`
+
 1. Testing the happy path thoroughly. No tests for successful `fromDate` and `toDate` changes or for when one date is initially invalid but becomes valid when the second date changes.
 2. Edge case around equal dates
 3. Radio button accessibility
 
 ### `StockList.tsx`
+
 1. Avoiding repetition
 2. Unchecking a checkbox
 3. Magic numbers
@@ -350,6 +364,7 @@ Relevant feedback for each was as follows;
 As well as suggesting tests for the defensive coding of line 56 and dealing with some data persistence between tests.
 
 ### `StockChart.tsx`
+
 1. Hadn't tested that things work correctly when the date range or the price option change. Doing the former took care testing line 36 (obvious really).
 2. More testing around adding and removing tickers, including adding 2 or more.
 3. Handing the if statements around the `newTicker` and `removedTicker` actions.
@@ -401,13 +416,13 @@ which also worked so I'll go with that instead.
 
 ## 2025-11-10 (PM)
 
-*Dates are out of order as everything from this point onwards is the branch rather than the base*
+_Dates are out of order as everything from this point onwards is the branch rather than the base_
 
 Now that the basics are all in place (playwright excepted), it's time to look at changing it using various other available tools. First up, it's replacing the use of `fetch` with `axios`.
 
-The documentation made this a fairly straightforward exercise in respect of my `dataFetch` function. Testing it, unsuprisingly, was a bit more difficult.
+The documentation made this a fairly straightforward exercise in respect of my `dataFetch` function. Testing it, unsurprisingly, was a bit more difficult.
 
-I'd figured that I probably had to import the library in to the test file and mock it but when the suite then ran I got a `Cannot use import statement outside a module` error which baffled me since I was importing it. After triple checking that I wans't going mad, I put it through Google and found that I had to [add the following](https://stackoverflow.com/a/74297004) to my `package.json` file:
+I'd figured that I probably had to import the library in to the test file and mock it but when the suite then ran I got a `Cannot use import statement outside a module` error which baffled me since I was importing it. After triple checking that I wasn't going mad, I put it through Google and found that I had to [add the following](https://stackoverflow.com/a/74297004) to my `package.json` file:
 
 ```
   "jest": {
@@ -440,4 +455,4 @@ Since `axios` will take any parameters as an object I no longer need to stringif
 
 Was planning on moving on to modern redux today but whilst I was reading through I saw that it makes use of Immer (which Richard W had us introduce, not entirely successfully, in the latter years of F1000) so thought I'd implement that first.
 
-This is not the most complicated of projects so using it is probably overkill but *id est quod id est* and all seems to have gone well with using it in the reducer and none of the tests need changing so that's good.
+This is not the most complicated of projects so using it is probably overkill but _id est quod id est_ and all seems to have gone well with using it in the reducer and none of the tests need changing so that's good.
