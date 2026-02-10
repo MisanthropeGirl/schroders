@@ -1,8 +1,16 @@
 # Schroder's technical test
 
-My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, starting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistence.
+My solution may not have gotten me a second interview but I can use this exercise as playground for learning new tools etc. The plan is, starting with Redux, to go about integrating various state management libraries in to the application and then write thorough tests to go with. If it fits, I shall also look at adding Next.js. If I bash my head for long enough against Google (other search engines are available) without managing to figure things out I'll even resort to seeing if a LLM can be of assistance.
 
-This is not a read me in the traditional sense but rather a diary of thngs I learnt/fought with along the way.
+This is not a read me in the traditional sense but rather a diary of things I learnt/fought with along the way.
+
+## Branches
+
+1. [Redux](https://github.com/MisanthropeGirl/schroders/tree/master) - Old skool redux, using the fetch API, Jest and MSW for testing
+2. [Axios](https://github.com/MisanthropeGirl/schroders/tree/axoios) - Swapping out the fetch API for the Axios library. Branched from 'Redux'.
+3. [Immer](https://github.com/MisanthropeGirl/schroders/tree/immer) - Using [immer](https://immerjs.github.io/immer/) for state updating. Branched from 'Axios'.
+4. [Redux Toolkit](https://github.com/MisanthropeGirl/schroders/tree/redux-toolkit) - Moving to a modern redux implementation, including the use of RTK Query for data fetching. Branched from 'Redux'.
+5. [Playwright](https://github.com/MisanthropeGirl/schroders/tree/playwright) - End to end testing using Playwright. Branched from Redux Toolkit.
 
 ## 2025-10-04
 
@@ -14,7 +22,7 @@ The biggest fight I had was with getting Redux DevTools to acknowledge the store
 
 ## 2025-10-10
 
-Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistence, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
+Started to add tests and today was all about index.tsx. Some comments I read online suggested skipping this as it is a trivial file and whilst I'm ordinarily in favour of the path of least resistance, I felt it was important, if only for the sake of completeness, for me to get this file tested as well. Cue a day of pain.
 
 Not knowing where to start, I took the sensible course and went looking to see [how others](https://stackoverflow.com/questions/43044696/test-a-create-react-app-index-js-file) have [gone about it](https://joaoforja.com/blog/how-to-test-a-rect-app-indexjs).
 
@@ -307,7 +315,7 @@ Added basic 'does it render without crashing tests' for each component and start
 
 ## 2025-10-28
 
-Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch tself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
+Realised that my error checking for the dates wasn't good enough so I rewrote it and the tests. Spent a lot of time trying to test the dispatching of the action for the price option change with the help of Claude but eventually gave up since I couldn't simulate the dispatch itself so stuck to testing the behaviour and the outcome. `--coverage` says 100% so hopefully I've covered everything.
 
 Started out using `fireEvent` to simulate the user interactions but was pointed at `userEvent` instead. I understand that this is the better way of emulating them but trying to update inputs with `.type()` (or at least date inputs) requires clearing the input first - although that may just be because of Material UI.
 
@@ -315,7 +323,7 @@ Started out using `fireEvent` to simulate the user interactions but was pointed 
 
 Wrote the tests for `App.tsx` and `StockList.tsx` today. For the former just checking that it renders was enough for full coverage and that worked fine once I'd mocked Highcharts.
 
-All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an elemnt to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [Mock Functions](https://jestjs.io/docs/mock-functions]) part of the Jest documentation but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
+All the happy path behavioural tests for the latter were easy enough, even discovering how to wait for an element to show up, i.e. the loading message being replaced by the table, except that I wasn't mocking `dataFetch` so was hitting the live API - which isn't particularly sensible. This was resolved once I started, with Claude's help, to test the not so happy path. (I'd been looking at the [Mock Functions](https://jestjs.io/docs/mock-functions]) part of the Jest documentation but couldn't see how to make the examples there work for what I wanted and I wasn't going to be finding `jest.spyOn` in a month of Sundays.) With what that told me I could go back and add mocking to the happy path test cases as well.
 
 The only line which I have been unable to test fully is line 56 as I can't fake the component in to having enabled checkboxes when the selectedTickers has three items. I did though try and the mock store was updated to include the ability to accept an initial state as a parameter. I could simply delete the offending if statement but it feels like a necessary piece of error checking just in case someone manages to get around Material UI's checkbox disabling.
 
@@ -325,7 +333,7 @@ Wrote the tests for `stockChart.tsx`. Mostly straightforward - except for when I
 
 Moved the `dataTransform` function to `utilities.tsx` so I could test it in isolation.
 
-If I exclude the files added when I was using mock service workers and `reportWebVitals.ts` then overall test coverage is close to 100%. Even with them in it is over 90%. It's mainly the lack of testing for `index.tsx` (see above) which is dragging it down so I'm going to declare myself satisifed wth my efforts. I may tomorrow though run everything through Claude and ask it to point out any potential improvements. After that, it is time to see what integration and end-to-end testing can potentially be applied.
+If I exclude the files added when I was using mock service workers and `reportWebVitals.ts` then overall test coverage is close to 100%. Even with them in it is over 90%. It's mainly the lack of testing for `index.tsx` (see above) which is dragging it down so I'm going to declare myself satisfied wth my efforts. I may tomorrow though run everything through Claude and ask it to point out any potential improvements. After that, it is time to see what integration and end-to-end testing can potentially be applied.
 
 ## 2025-11-01
 
@@ -533,4 +541,4 @@ The switch to MSW on this branch has also lead to the coverage report once again
 
 Some further searching bought the `axios-mock-adapter` package to my attention. By using this I could restore MSW to being global and replace the jest mocking of axios for all but one test ('it handles no response being received') as, like with MSW, axios doesn't deal with not network errors (which, again, is not particularly surprising).
 
-The solution for the remergence of the `StockChart.tsx` coverage issue turned out to be adding a delay to that endpoint's handler in order to simulate the network latency. Once that was done all was good again.
+The solution for the re-emergence of the `StockChart.tsx` coverage issue turned out to be adding a delay to that endpoint's handler in order to simulate the network latency. Once that was done all was good again.
