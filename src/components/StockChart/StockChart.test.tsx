@@ -2,11 +2,11 @@ import { rest } from "msw";
 import { act, render, screen, waitFor, waitForElementToBeRemoved } from "../../test-utils";
 import { DATE_MAX, DATE_MIDDLE, DATE_MIN, POLYGON_DATA_URL } from "../../constants";
 import { server } from "../../mocks/server";
-import { stockDataApiOutput } from "../../mocks/Stocks";
 import { datesUpdated } from "../DateSelector/dateSelectorSlice";
 import { priceOptionUpdated } from "../PriceOptions/priceOptionsSlice";
 import { selectedStocksUpdated } from "../StockList/stockListSlice";
 import StockChart from "./StockChart";
+import { stockDataApiOutput } from "../../mocks/Stocks";
 
 // Mock Highcharts
 jest.mock("highcharts", () => ({}));
@@ -26,41 +26,6 @@ describe("StockChart", () => {
 
     expect(screen.getByText("Awaiting data")).toBeInTheDocument();
     expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
-  });
-
-  test("it displays error messages when tickers fail", async () => {
-    server.use(
-      rest.get(`${POLYGON_DATA_URL}/A/*`, (_req, res, ctx) => {
-        return res.once(ctx.json(stockDataApiOutput));
-      }),
-      rest.get(`${POLYGON_DATA_URL}/AA/*`, (_req, res, ctx) => {
-        return res.once(ctx.status(500));
-      }),
-      rest.get(`${POLYGON_DATA_URL}/AAM/*`, (_req, res, ctx) => {
-        return res.once(ctx.status(404));
-      }),
-    );
-
-    const { store } = render(<StockChart />);
-
-    act(() => store.dispatch(selectedStocksUpdated("A")));
-
-    await screen.findByTestId("stockchart");
-
-    act(() => store.dispatch(selectedStocksUpdated("AA")));
-    act(() => store.dispatch(selectedStocksUpdated("AAM")));
-
-    await waitFor(() => {
-      expect(screen.getByText(/⚠️ Failed to load AA:/i)).toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/⚠️ Failed to load AAM:/i)).toBeInTheDocument();
-    });
-
-    // Verify both errors are in the chart-errors container
-    const errorMessages = screen.getAllByText(/⚠️ Failed to load/i);
-    expect(errorMessages).toHaveLength(2);
   });
 
   test("it should display a chart when there is a ticker", async () => {
@@ -235,6 +200,79 @@ describe("StockChart", () => {
 
     // Verify that the chart isn't visible
     expect(screen.getByText("Awaiting data")).toBeInTheDocument();
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
+  });
+
+  test("it shows only errors when all stocks fail", async () => {
+    server.use(
+      rest.get(`${POLYGON_DATA_URL}/AA/*`, (_req, res, ctx) => {
+        return res(ctx.status(500));
+      }),
+      rest.get(`${POLYGON_DATA_URL}/AAM/*`, (_req, res, ctx) => {
+        return res(ctx.status(404));
+      }),
+    );
+
+    const { store } = render(<StockChart />);
+
+    act(() => store.dispatch(selectedStocksUpdated("AA")));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to load AA/i)).toBeInTheDocument();
+    });
+
+    act(() => store.dispatch(selectedStocksUpdated("AAM")));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to load AAM/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
+
+    expect(screen.queryByText("Awaiting data")).not.toBeInTheDocument();
+  });
+
+  test("it displays errors inline when some stocks succeed and others fail", async () => {
+    server.use(
+      rest.get(`${POLYGON_DATA_URL}/A/*`, (_req, res, ctx) => {
+        return res(ctx.json(stockDataApiOutput));
+      }),
+      rest.get(`${POLYGON_DATA_URL}/INVALID/*`, (_req, res, ctx) => {
+        return res(ctx.status(404));
+      }),
+    );
+
+    const { store } = render(<StockChart />);
+
+    act(() => store.dispatch(selectedStocksUpdated("A")));
+    await screen.findByTestId("stockchart");
+
+    act(() => store.dispatch(selectedStocksUpdated("INVALID")));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to load INVALID/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("stockchart")).toBeInTheDocument();
+
+    const chartContainer = screen.getByTestId("stockchart");
+    expect(chartContainer).toBeInTheDocument();
+  });
+
+  test("it handles other errors", async () => {
+    server.use(
+      rest.get(`${POLYGON_DATA_URL}/INVALID/*`, (req, res, ctx) => {
+        return res.once(ctx.status(404), ctx.text("Not found"));
+      }),
+    );
+
+    const { store } = render(<StockChart />);
+
+    act(() => store.dispatch(selectedStocksUpdated("INVALID")));
+
+    expect(await screen.findByText(/Failed to load INVALID/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Failed to fetch/i)).toBeInTheDocument();
+
     expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
   });
 });

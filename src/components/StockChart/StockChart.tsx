@@ -28,7 +28,21 @@ function StockChart() {
     ticker => dispatch(tickersUpdated(ticker)),
   );
 
-  if (chartTickers.length === 0 && Object.keys(fetchErrors).length === 0) {
+  const renderErrors = () => (
+    <div className="chart-errors">
+      {Object.entries(fetchErrors).map(([ticker, error]) => (
+        <div key={ticker} className="error-message">
+          ⚠️ Failed to load {ticker}: {error}
+        </div>
+      ))}
+    </div>
+  );
+
+  if (chartTickers.length === 0 && Object.keys(fetchErrors).length > 0) {
+    return <div className="chart">{renderErrors()}</div>;
+  }
+
+  if (chartTickers.length === 0) {
     return (
       <div className="chart">
         <div className="chartMsg">Awaiting data</div>
@@ -37,46 +51,20 @@ function StockChart() {
   }
 
   const chartOptions: Highcharts.Options = {
-    chart: {
-      type: "line",
-    },
-    title: {
-      text: `${priceOption} Price over time`,
-    },
-    xAxis: {
-      type: "datetime",
-    },
-    yAxis: {
-      title: {
-        text: "Price (USD)",
-      },
-    },
-    legend: {
-      enabled: true,
-    },
+    chart: { type: "line" },
+    title: { text: `${priceOption} Price over time` },
+    xAxis: { type: "datetime" },
+    yAxis: { title: { text: "Price (USD)" } },
+    legend: { enabled: true },
     plotOptions: {
-      series: {
-        label: {
-          connectorAllowed: false,
-        },
-      },
+      series: { label: { connectorAllowed: false } },
     },
-    // Gave up trying to fix the typescript issue here and bypassed it
-    // @ts-ignore comment
-    series: chartData[priceOption],
+    series: chartData[priceOption] as any,
   };
 
   return (
     <div className="chart" data-testid="stockchart">
-      {Object.keys(fetchErrors).length > 0 && (
-        <div className="chart-errors">
-          {Object.entries(fetchErrors).map(([ticker, error]) => (
-            <div key={ticker} className="error-message">
-              ⚠️ Failed to load {ticker}: {error}
-            </div>
-          ))}
-        </div>
-      )}
+      {Object.keys(fetchErrors).length > 0 && renderErrors()}
 
       {chartTickers.length > 0 && (
         <HighchartsReact highcharts={Highcharts} options={chartOptions} ref={chartComponentRef} />

@@ -1,6 +1,12 @@
-import { useState, useEffect, useRef } from "react";
-import { useLazyGetStockDataQuery } from "../app/apiSlice";
-import { chartPriceOptions, PRICE_SERIES_CODES, createInitialChartDataState } from "../constants";
+import { useState, useEffect } from "react";
+import { useQueries } from "@tanstack/react-query";
+import {
+  chartPriceOptions,
+  PRICE_SERIES_CODES,
+  createInitialChartDataState,
+  POLYGON_DATA_URL,
+  POLYGON_API_KEY,
+} from "../constants";
 import { dataTransform, removeTransformedDataByTicker } from "../utilities";
 
 export function useStockChartData(
@@ -10,75 +16,90 @@ export function useStockChartData(
   toDate: string,
   onTickerUpdate: (ticker: string) => void,
 ) {
-  const [getStockData] = useLazyGetStockDataQuery();
   const [chartData, setChartData] = useState<Record<string, TransformedData[]>>(
     createInitialChartDataState(),
   );
   const [fetchErrors, setFetchErrors] = useState<Record<string, string>>({});
-  const isInitialMount = useRef(true);
 
-  const loadData = async (ticker: string, from: string = fromDate, to: string = toDate) => {
-    try {
-      const response = await getStockData({ ticker, from, to }, true).unwrap();
-      updateChartData(response.ticker, response.results);
+  // Fetch data for all selected stocks
+  const queries = useQueries({
+    queries: selectedStocks.map(ticker => ({
+      queryKey: ["stock", ticker, fromDate, toDate],
+      queryFn: async () => {
+        const response = await fetch(
+          `${POLYGON_DATA_URL}/${ticker}/range/1/day/${fromDate}/${toDate}?apiKey=${POLYGON_API_KEY}&adjusted=true&sort=asc`,
+        );
 
-      // Clear any previous error for this ticker
-      setFetchErrors(prev => {
-        const updated = { ...prev };
-        delete updated[ticker];
-        return updated;
-      });
-    } catch (error) {
-      // Store the error for this ticker
-      setFetchErrors(prev => ({
-        ...prev,
-        [ticker]: error instanceof Error ? error.message : "Failed to fetch data",
-      }));
-    }
-  };
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${ticker}`);
+        }
 
-  const updateChartData = (ticker: string, results: StockData[]) => {
-    setChartData(prev => {
-      const updated = { ...prev };
-      removeTransformedDataByTicker(updated, ticker);
+        return response.json();
+      },
+      enabled: !!ticker, // Only fetch if ticker exists
+    })),
+  });
 
-      chartPriceOptions.forEach(option => {
-        updated[option].push({
-          type: "line",
-          name: ticker,
-          data: dataTransform(
-            results,
-            PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES],
-          ),
+  // Could have this in the dependency array but eslint complains
+  // Need more than just dataUpdatedAt in here or the useEffect won't be triggered
+  const queryUpdateKey = queries
+    .map((q, i) => `${selectedStocks[i]}-${q.status}-${q.dataUpdatedAt}`)
+    .join(",");
+
+  // Update chart data when queries succeed
+  useEffect(() => {
+    queries.forEach((query, index) => {
+      const ticker = selectedStocks[index];
+
+      if (query.isSuccess && query.data) {
+        // Update chart tickers in Redux if not already there
+        if (!chartTickers.includes(ticker)) {
+          onTickerUpdate(ticker);
+        }
+
+        // Update chart data
+        setChartData(prev => {
+          const updated = { ...prev };
+          removeTransformedDataByTicker(updated, ticker);
+
+          chartPriceOptions.forEach(option => {
+            updated[option].push({
+              type: "line",
+              name: ticker,
+              data: dataTransform(
+                query.data.results,
+                PRICE_SERIES_CODES[option.toUpperCase() as keyof typeof PRICE_SERIES_CODES],
+              ),
+            });
+          });
+
+          return updated;
         });
-      });
 
-      return updated;
+        // Clear error for this ticker
+        setFetchErrors(prev => {
+          const updated = { ...prev };
+          delete updated[ticker];
+          return updated;
+        });
+      }
+
+      if (query.isError) {
+        // Store error for this ticker
+        // includes defensive code - error will, in practice, always be of type Error
+        setFetchErrors(prev => ({
+          ...prev,
+          [ticker]:
+            query.error instanceof Error
+              ? query.error.message
+              : /* istanbul ignore next */ String(query.error),
+        }));
+      }
     });
-  };
-
-  // Load data for newly selected stocks
-  useEffect(() => {
-    const existingSet = new Set(chartTickers);
-
-    selectedStocks
-      .filter(ticker => !existingSet.has(ticker))
-      .forEach(ticker => {
-        loadData(ticker).then(() => onTickerUpdate(ticker));
-      });
+    // Only want to run when query data updates (tracked by status & dataUpdatedAt - see queryUpdateKey declaration)
+    // Including everything else, e.g. selectedStocks, would cause unnecessary re-runs
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStocks]);
-
-  // Reload data when dates change
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    selectedStocks.forEach(ticker => loadData(ticker, fromDate, toDate));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromDate, toDate]);
+  }, [queryUpdateKey]);
 
   // Remove data for deselected stocks
   useEffect(() => {

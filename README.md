@@ -11,6 +11,7 @@ This is not a read me in the traditional sense but rather a diary of things I le
 3. [Immer](https://github.com/MisanthropeGirl/schroders/tree/immer) - Using [immer](https://immerjs.github.io/immer/) for state updating. Branched from 'Axios'.
 4. [Redux Toolkit](https://github.com/MisanthropeGirl/schroders/tree/redux-toolkit) - Moving to a modern redux implementation, including the use of RTK Query for data fetching. Branched from 'Redux'.
 5. [Playwright](https://github.com/MisanthropeGirl/schroders/tree/playwright) - End to end testing using Playwright. Branched from Redux Toolkit.
+6. [Tanstack](https://github.com/MisanthropeGirl/schroders/tree/tanstack) - Using [Tanstack Query](https://tanstack.com/query/v4) for the async data fetching in place of RTK Query. Otherwise leaving RTK in place. Branched from Playwright.
 
 ## 2025-10-04
 
@@ -684,4 +685,72 @@ What I needed to do, which is different from MSW is include the wildcard in the 
 
 Adding other functionality tests involving thr APIs. Hassle free, even figuring ut how to call the API multiple times within the same test. Nice to know something is. :)
 
-There is one test which refuses to work on Firefox (list.spec.ts:"it loads correctly) but that would seem to be a timing thing with the API completing ahead of the test starting so the 'Loading table' message is never seen. I can live with that.
+There is one test which refuses to work on Firefox (list.spec.ts:"it loads correctly") but that would seem to be a timing thing with the API completing ahead of the test starting so the 'Loading table' message is never seen. I can live with that.
+
+## 2026-02-13
+
+Time to move on to other state management libraries and first up is [Tanstack Query](https://tanstack.com/query/v4). I initially thought that it could be used in place of Redux but then the brain caught up and I realised that it is primarily a tool for asynchronous state management, i.e. data fetching from remote servers, so I shall be leaving Redux in place and just changing my use of RTK Query in `apiSlice.ts`.
+
+I've gone with v4.43.0 rather than v5 as I'm using TS v4.95 at present. I did try installing the latest v5 but had some dependency issues so decided to play it safe.
+
+## 2026-02-13
+
+Adding Tanstack to `StockList.tsx` was fairly simple: remove the `apiSlice.ts` import, ditch any references to `useGetQuery` or `usePrefetch`, and bring back use of the 'fetch' API (including resurrecting `convertObjectToString()`), i.e.
+
+```
+const fetchData = async (): Promise<StockListApiResponse> => {
+  const options = convertObjectToString({
+    market: "stocks",
+    type: "CS",
+    exchange: "XNYS",
+    active: true,
+    order: "asc",
+    limit: 100,
+    sort: "ticker",
+  });
+  const response = await fetch(`${url}?apiKey=${POLYGON_API_KEY}${options}`);
+  return await response.json();
+};
+
+const {
+  isLoading,
+  isError,
+  isSuccess,
+  data: stockListResponse = {} as StockListApiResponse,
+  data: stockListResponse,
+  error,
+} = useQuery({
+  queryKey: ["stockList", url],
+  queryFn: fetchData,
+});
+```
+
+and things were pretty much there except for some changes around url formation to ensure something unique for the cache key.
+
+`StockChart.tsx`/`useStockChartData.ts` weren't so simple - or weren't until I was introduced to [`useQueries`](https://tanstack.com/query/v4/docs/framework/react/reference/useQueries) - as I was trying and failing to use `useQuery` within a loop and butting my head against React's 'Rule of Hooks'.
+
+I can loop over all selected tickers within a call to `useQueries`, building individual queries, cache keys and API calls. A `useEffect`, listening in the first instance to the `dataUpdatedAt` property of each query (not the `queries` array), will then ensure that chart data is added or updated as appropriate. `useQueries` is called every rerender and the cache keys are compared. If they are different then Tanstack automatically reruns that query. Since the ticker and both dates are part of the cache key it will trigger if dates are changed or a new ticker is added.
+
+The upside of this is that I no longer need one `useEffect` and the `isInitialMount` hack now that those tickers and dates are part of the cache key.
+
+And then it was on to updating the tests.
+
+This time I remembered that I would need to update `test-utils.tsx` so got in early with wrapping `<QueryClientProvider>` around my test store but, as always seems to be the case, I found myself struggling to test my error handling. It wasn't though the tests themselves but what was (or wasn't) triggering the useEffect. Once the ticker and the status were added then the error tests were fine.
+
+## 2026-02-17
+
+When changing the hook tests I tried to mock `useQueries` directly but that didn't work. I needed to mock the entire package, wrapping the hook in `<QueryClientProvider>`. Since that is already used in `test-utils.tsx` and I don't like reinventing the wheel it was necessary to make some changes to the latter to extract a function that could be used in both places. I made the mistake when creating the mock `QueryClient` of thinking I could just share that instance as required. That was a mistake as it meant that my cache wasn't being cleared between tests and mock API outputs were bleeding across tests. It needed to recreated everywhere it was needed.
+
+## 2026-02-20
+
+The last problem was with trying to test the next and previous buttons in `StockList.tsx`. I thought I was doing the smart thing by assigning them to variables at the start of the test but because they are recreated each time the component is rerendered I was actually trying to use things which no longer existed and thus my tests failed. Once I stopped trying to be smart all was good.
+
+There are a couple of lines which the coverage report says aren't fully tested but that's because they include fallbacks which are never going to be reached. A quick google and I found that inserting `/* istanbul ignore next */` right next to the fallbacks meant that I can excluded them from my coverage report thus maintaining my 100%.
+
+## 2026-02-26
+
+My Playwright tests also needed some work. Which was somewhat surprising since the functionality hadn't changed.
+
+For `list.spec.ts` I had to ensure that React Query DevTools was closed as this was blocking the simulated clicks. Additionally, I had to add a longer timeout to the error test as, despite having `retry: false` in my `test-utils.tsx`, Tanstack wasn't completing the failed fetch before the test gave up looking for the error message.
+
+It had the same issue with React Query DevTools on `chart.spec.ts` but that was hardly surprising. In that file I also compounded matters by using `await page.reload();` after the API call so I was closing it, calling the API, reloading the page and thus reopening it. Doh! The last issue was with the error test (how shocking) but once again increasing the timeout sorted that.

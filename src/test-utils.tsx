@@ -1,12 +1,28 @@
-import React, { ReactElement } from "react";
+import React, { ReactElement, ReactNode } from "react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { render, RenderOptions } from "@testing-library/react";
 import { rootReducer, RootState } from "./app/store";
-import { apiSlice } from "./app/apiSlice";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-interface CustomRenderResult extends ReturnType<typeof render> {
-  store: ReturnType<typeof configureStore>;
+export function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false, // Don't retry on test failures
+        refetchOnWindowFocus: false,
+        cacheTime: 0, // Don't cache between tests
+      },
+    },
+  });
+}
+
+export function queryClientProviderWrapper() {
+  const testQueryClient = createTestQueryClient();
+
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={testQueryClient}>{children}</QueryClientProvider>
+  );
 }
 
 const customRender = (
@@ -21,17 +37,22 @@ const customRender = (
   // Get the initial state from your reducer
   const initialState = rootReducer(undefined, { type: "@@INIT" });
 
+  const testQueryClient = createTestQueryClient();
+
   // Merge preloaded state with initial state
   const mergedState = preloadedState ? { ...initialState, ...preloadedState } : initialState;
 
   const testStore = configureStore({
     reducer: rootReducer,
     preloadedState: mergedState,
-    middleware: getDefaultMiddleware => getDefaultMiddleware().concat(apiSlice.middleware),
   });
 
   const ReduxProvider = ({ children }: { children: React.ReactNode }) => {
-    return <Provider store={testStore}>{children}</Provider>;
+    return (
+      <Provider store={testStore}>
+        <QueryClientProvider client={testQueryClient}>{children}</QueryClientProvider>
+      </Provider>
+    );
   };
 
   return {

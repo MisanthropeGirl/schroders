@@ -13,17 +13,21 @@ test.describe("List", () => {
     });
 
     await page.goto("http://localhost:3000/");
+
+    // Hide Tanstack Query DevTools as it blocks clicks
+    await page.addStyleTag({
+      content: ".ReactQueryDevtools { display: none !important; }",
+    });
+
+    await expect(page.getByText("Loading table")).not.toBeVisible();
+    await expect(page.getByTestId("stocklist")).toBeVisible();
   });
 
   test("it loads correctly", async ({ page }) => {
-    await expect(page.getByText("Loading table")).toBeVisible();
-
     const table = page.getByTestId("stocklist");
 
     await expect(table).toBeVisible();
     await expect(table.getByRole("checkbox")).toHaveCount(10);
-
-    await expect(page.getByText("Loading table")).not.toBeVisible();
   });
 
   test("it shows are empty table when there is no data", async ({ page }) => {
@@ -54,13 +58,13 @@ test.describe("List", () => {
 
     await page.reload();
 
-    await expect(page.getByText(/An error has occurred:/)).toBeVisible();
     await expect(page.getByTestId("stocklist")).not.toBeVisible();
+
+    // Tanstack runs the query several times before failing so need to increase the timeout
+    await expect(page.getByText(/An error has occurred/)).toBeVisible({ timeout: 10_000 });
   });
 
   test("the previous button is disabled until the next btn is clicked", async ({ page }) => {
-    await expect(page.getByTestId("stocklist")).toBeVisible();
-
     const btnNext = page.getByTestId("btn-next");
     const btnPrev = page.getByTestId("btn-prev");
 
@@ -73,8 +77,6 @@ test.describe("List", () => {
   test("the previous button is disabled when we're back to the first page of results", async ({
     page,
   }) => {
-    await expect(page.getByTestId("stocklist")).toBeVisible();
-
     const btnNext = page.getByTestId("btn-next");
     const btnPrev = page.getByTestId("btn-prev");
 
@@ -88,8 +90,6 @@ test.describe("List", () => {
   });
 
   test("allows selecting up to 3 tickers and disables remaining checkboxes", async ({ page }) => {
-    await expect(page.getByTestId("stocklist")).toBeVisible();
-
     const fourthCheckbox = page.getByRole("checkbox", { name: "Select AAP" });
 
     await page.getByRole("checkbox", { name: "Select A", exact: true }).check();

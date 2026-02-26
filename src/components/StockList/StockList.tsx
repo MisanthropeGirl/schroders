@@ -1,4 +1,5 @@
-import { ChangeEvent, useCallback, useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Table from "@mui/material/Table";
@@ -6,8 +7,8 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { useGetStockListQuery, usePrefetch } from "../../app/apiSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { POLYGON_LIST_URL, POLYGON_API_KEY, listUrlOptions } from "../../constants";
 import { selectStocksSelected, selectedStocksUpdated } from "./stockListSlice";
 import "./stockList.css";
 
@@ -18,34 +19,34 @@ interface StockListExceptProps {
 function StockList() {
   const selectedStocks = useAppSelector(selectStocksSelected);
   const dispatch = useAppDispatch();
-  const prefetchPage = usePrefetch("getStockList");
 
   const [prevUrl, setPrevUrl] = useState("");
-  const [url, setUrl] = useState("/v3/reference/tickers");
+  const [url, setUrl] = useState(`${POLYGON_LIST_URL}?apiKey=${POLYGON_API_KEY}${listUrlOptions}`);
 
   // need this to persist between renders
   const allUrls = useRef([url]);
+
+  const fetchData = async (): Promise<StockListApiResponse> => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("An error has occurred");
+    }
+    return await response.json();
+  };
 
   const {
     isLoading,
     isError,
     isSuccess,
-    data: stockListResponse = {} as StockListApiResponse,
+    data: stockListResponse,
     error,
-  } = useGetStockListQuery(url);
-
-  const prefetchPrev = useCallback(() => {
-    prefetchPage(prevUrl);
-  }, [prevUrl, prefetchPage]);
-
-  const prefetchNext = useCallback(() => {
-    prefetchPage(stockListResponse.next_url);
-  }, [prefetchPage, stockListResponse]);
-
-  const stockList = isSuccess ? stockListResponse.results : [];
+  } = useQuery({
+    queryKey: ["stockList", url],
+    queryFn: fetchData,
+  });
 
   const navigate = (newUrl: string) => {
-    // new url? add to array
+    // new url add to array
     if (!new Set(allUrls.current).has(newUrl)) {
       allUrls.current.push(newUrl);
     }
@@ -71,24 +72,17 @@ function StockList() {
   };
 
   if (isError) {
-    if ("status" in error) {
-      // you can access all properties of `FetchBaseQueryError` here
-      const errMsg = "error" in error ? error.error : JSON.stringify(error.data);
-
-      return (
-        <div>
-          <div>An error has occurred: {errMsg}</div>
-        </div>
-      );
-    }
-
-    // you can access all properties of `SerializedError` here
-    return <div>{error.message}</div>;
+    // defensive code - error will, in practice, always be of type Error
+    return (
+      <div>{error instanceof Error ? error.message : /* istanbul ignore next */ String(error)}</div>
+    );
   }
 
-  if (isLoading) {
+  if (isLoading || !isSuccess) {
     return <div>Loading table</div>;
   }
+
+  const nextUrl = `${stockListResponse.next_url}&apiKey=${POLYGON_API_KEY}${listUrlOptions}`;
 
   function StockListExcept({ stock }: StockListExceptProps) {
     return (
@@ -119,18 +113,12 @@ function StockList() {
         <Button
           variant="outlined"
           onClick={() => navigate(prevUrl)}
-          onMouseEnter={prefetchPrev}
           disabled={prevUrl === ""}
           data-testid="btn-prev"
         >
           &laquo; Previous
         </Button>
-        <Button
-          variant="outlined"
-          onClick={() => navigate(stockListResponse.next_url)}
-          onMouseEnter={prefetchNext}
-          data-testid="btn-next"
-        >
+        <Button variant="outlined" onClick={() => navigate(nextUrl)} data-testid="btn-next">
           Next &raquo;
         </Button>
       </div>
@@ -153,7 +141,7 @@ function StockList() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {stockList.map(stock => (
+          {stockListResponse.results.map(stock => (
             <StockListExcept key={stock.ticker} stock={stock} />
           ))}
         </TableBody>

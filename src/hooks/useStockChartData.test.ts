@@ -1,6 +1,13 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { useLazyGetStockDataQuery } from "../app/apiSlice";
-import { createInitialChartDataState, DATE_MAX, DATE_MIDDLE, DATE_MIN } from "../constants";
+import { rest } from "msw";
+import {
+  createInitialChartDataState,
+  DATE_MAX,
+  DATE_MIDDLE,
+  DATE_MIN,
+  POLYGON_DATA_URL,
+} from "../constants";
+import { server } from "../mocks/server";
 import {
   A_CHART_DATA,
   A_DATE_RANGE_CHART_DATA,
@@ -8,23 +15,14 @@ import {
   stockDataApiOutputDateChanged,
 } from "../mocks/Stocks";
 import { useStockChartData } from "./useStockChartData";
-
-jest.mock("../app/apiSlice");
+import { queryClientProviderWrapper } from "../test-utils";
 
 describe("useStockChartData", () => {
   test("fetches and transforms data", async () => {
-    const mockGetStockData = jest.fn().mockReturnValue({
-      unwrap: jest.fn().mockResolvedValueOnce(stockDataApiOutput),
-    });
-
-    (useLazyGetStockDataQuery as jest.Mock).mockReturnValue([
-      mockGetStockData,
-      { isSuccess: true },
-    ]);
-
     const onTickerUpdate = jest.fn();
-    const { result } = renderHook(() =>
-      useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
+    const { result } = renderHook(
+      () => useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
+      { wrapper: queryClientProviderWrapper() },
     );
 
     await waitFor(() => {
@@ -33,25 +31,21 @@ describe("useStockChartData", () => {
   });
 
   test("fetches and transforms data when a date changes", async () => {
-    const mockGetStockData = jest
-      .fn()
-      .mockReturnValueOnce({
-        unwrap: jest.fn().mockResolvedValue(stockDataApiOutput),
-      })
-      .mockReturnValueOnce({
-        unwrap: jest.fn().mockResolvedValue(stockDataApiOutputDateChanged),
-      });
-
-    (useLazyGetStockDataQuery as jest.Mock).mockReturnValue([
-      mockGetStockData,
-      { isSuccess: true },
-    ]);
+    server.use(
+      rest.get(`${POLYGON_DATA_URL}/A/range/1/day/${DATE_MIN}/${DATE_MAX}`, (req, res, ctx) => {
+        return res.once(ctx.json(stockDataApiOutput));
+      }),
+      rest.get(`${POLYGON_DATA_URL}/A/range/1/day/${DATE_MIDDLE}/${DATE_MAX}`, (req, res, ctx) => {
+        return res.once(ctx.json(stockDataApiOutputDateChanged));
+      }),
+    );
 
     const onTickerUpdate = jest.fn();
     const { result, rerender } = renderHook(
       ({ selectedStocks, chartTickers, fromDate, toDate }) =>
         useStockChartData(selectedStocks, chartTickers, fromDate, toDate, onTickerUpdate),
       {
+        wrapper: queryClientProviderWrapper(),
         initialProps: {
           selectedStocks: ["A"],
           chartTickers: [] as string[],
@@ -79,20 +73,12 @@ describe("useStockChartData", () => {
   });
 
   test("Removes data", async () => {
-    const mockGetStockData = jest.fn().mockReturnValue({
-      unwrap: jest.fn().mockResolvedValueOnce(stockDataApiOutput),
-    });
-
-    (useLazyGetStockDataQuery as jest.Mock).mockReturnValue([
-      mockGetStockData,
-      { isSuccess: true },
-    ]);
-
     const onTickerUpdate = jest.fn();
     const { result, rerender } = renderHook(
       ({ selectedStocks, chartTickers, fromDate, toDate }) =>
         useStockChartData(selectedStocks, chartTickers, fromDate, toDate, onTickerUpdate),
       {
+        wrapper: queryClientProviderWrapper(),
         initialProps: {
           selectedStocks: ["A"],
           chartTickers: [] as string[],
@@ -120,46 +106,20 @@ describe("useStockChartData", () => {
   });
 
   test("stores error message when rejection is an Error instance", async () => {
-    const mockGetStockData = jest.fn().mockReturnValue({
-      unwrap: jest.fn().mockRejectedValue(new Error("Network error")),
-    });
-
-    (useLazyGetStockDataQuery as jest.Mock).mockReturnValue([
-      mockGetStockData,
-      { isError: false, error: undefined },
-    ]);
+    server.use(
+      rest.get(`${POLYGON_DATA_URL}/A/range/1/day/:from/:to`, (req, res, ctx) => {
+        return res.once(ctx.status(500));
+      }),
+    );
 
     const onTickerUpdate = jest.fn();
-    const { result } = renderHook(() =>
-      useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
+    const { result } = renderHook(
+      () => useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
+      { wrapper: queryClientProviderWrapper() },
     );
 
     await waitFor(() => {
-      expect(result.current.fetchErrors["A"]).toBe("Network error");
+      expect(result.current.fetchErrors["A"]).toBe("Failed to fetch A");
     });
-  });
-
-  test("handles various non-Error types with generic message", async () => {
-    const testCases = ["string error", 123, null, undefined, { message: "object error" }];
-
-    for (const errorValue of testCases) {
-      const mockGetStockData = jest.fn().mockReturnValue({
-        unwrap: jest.fn().mockRejectedValue(errorValue),
-      });
-
-      (useLazyGetStockDataQuery as jest.Mock).mockReturnValue([
-        mockGetStockData,
-        { isError: false, error: undefined },
-      ]);
-
-      const onTickerUpdate = jest.fn();
-      const { result } = renderHook(() =>
-        useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
-      );
-
-      await waitFor(() => {
-        expect(result.current.fetchErrors["A"]).toBe("Failed to fetch data");
-      });
-    }
   });
 });

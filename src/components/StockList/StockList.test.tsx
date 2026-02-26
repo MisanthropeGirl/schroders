@@ -13,19 +13,21 @@ import { initialState } from "./stockListSlice";
 import StockList from "./StockList";
 
 describe("StockList", () => {
-  test("it renders without crashing", async () => {
-    render(<StockList />);
-
-    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
-    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
-    expect(screen.getByTestId("stocklist")).toBeInTheDocument();
+  afterEach(() => {
+    server.resetHandlers();
   });
 
-  test("it should display loading state initially", () => {
+  test("it renders without crashing", () => {
+    render(<StockList />);
+  });
+
+  test("it should display loading state initially and then a table", async () => {
     render(<StockList />);
 
     expect(screen.getByText("Loading table")).toBeInTheDocument();
-    expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Loading table"));
+    expect(screen.queryByText("Loading table")).not.toBeInTheDocument();
+    expect(screen.getByTestId("stocklist")).toBeInTheDocument();
   });
 
   test("it should display a table when the data fetch succeeds", async () => {
@@ -182,7 +184,7 @@ describe("StockList", () => {
     await screen.findByTestId("stocklist");
 
     const btn: HTMLButtonElement = screen.getByTestId("btn-prev");
-    expect(btn.disabled).toBe(true);
+    expect(btn).toBeDisabled();
 
     fireEvent.click(btn);
 
@@ -191,19 +193,28 @@ describe("StockList", () => {
   });
 
   test("the previous button should be enabled when the next button is clicked", async () => {
+    server.use(
+      rest.get(POLYGON_LIST_URL, (_req, res, ctx) => {
+        return res.once(ctx.json(stockListApiOutput));
+      }),
+      rest.get(POLYGON_LIST_URL, (_req, res, ctx) => {
+        return res.once(ctx.json(stockListApiOutput2));
+      }),
+    );
+
     const user = userEvent.setup();
     render(<StockList />);
 
     await screen.findByTestId("stocklist");
 
-    const btnPrev: HTMLButtonElement = screen.getByTestId("btn-prev");
-    expect(btnPrev.disabled).toBe(true);
+    expect(screen.getByTestId("btn-prev")).toBeDisabled();
+    expect(screen.getByTestId("btn-next")).toBeEnabled();
 
-    const btnNext: HTMLButtonElement = screen.getByTestId("btn-next");
-    expect(btnNext.disabled).toBe(false);
+    await user.click(screen.getByTestId("btn-next"));
 
-    await user.click(btnNext);
-    expect(btnPrev.disabled).toBe(false);
+    await waitFor(() => {
+      expect(screen.getByTestId("btn-prev")).toBeEnabled();
+    });
   });
 
   test("a different set of stocks are shown when the user clicks on the navigation buttons", async () => {
@@ -224,27 +235,28 @@ describe("StockList", () => {
 
     await screen.findByTestId("stocklist");
 
-    const btnPrev: HTMLButtonElement = screen.getByTestId("btn-prev");
-    const btnNext: HTMLButtonElement = screen.getByTestId("btn-next");
+    expect(screen.getByTestId("btn-prev")).toBeDisabled();
 
-    const firstCheckbox = () => screen.getAllByRole("checkbox")[0] as HTMLInputElement;
+    const firstCheckbox = screen.getAllByRole("checkbox")[0] as HTMLInputElement;
+    expect(firstCheckbox.value).toBe("A");
 
-    expect(btnPrev.disabled).toBe(true);
-    expect(firstCheckbox().value).toBe("A");
-
-    await user.click(btnNext);
-    expect(btnPrev.disabled).toBe(false);
+    await user.click(screen.getByTestId("btn-next"));
 
     await waitFor(() => {
-      expect(firstCheckbox().value).toBe("AAT");
+      const firstCheckbox = screen.getAllByRole("checkbox")[0] as HTMLInputElement;
+      expect(firstCheckbox.value).toBe("AAT");
     });
 
-    await user.click(btnPrev);
-    expect(btnPrev.disabled).toBe(true);
+    expect(screen.getByTestId("btn-prev")).toBeEnabled();
+
+    await user.click(screen.getByTestId("btn-prev"));
 
     await waitFor(() => {
-      expect(firstCheckbox().value).toBe("A");
+      const firstCheckbox = screen.getAllByRole("checkbox")[0] as HTMLInputElement;
+      expect(firstCheckbox.value).toBe("A");
     });
+
+    expect(screen.getByTestId("btn-prev")).toBeDisabled();
   });
 
   test("it should display an error message when data fetch fails with Error", async () => {
@@ -257,72 +269,9 @@ describe("StockList", () => {
     render(<StockList />);
 
     await waitFor(() => {
-      expect(screen.getByText(/An error has occurred:/)).toBeInTheDocument();
+      expect(screen.getByText(/An error has occurred/)).toBeInTheDocument();
     });
 
-    expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
-  });
-});
-
-describe("StockList errors using Jest Mocking", () => {
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  test("it should display error message for serialized errors", async () => {
-    // Mock the RTK Query hook to return a SerializedError
-    jest.spyOn(require("../../app/apiSlice"), "useGetStockListQuery").mockReturnValue({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      data: undefined,
-      error: {
-        name: "SerializationError",
-        message: "Failed to parse response",
-      },
-    });
-
-    render(<StockList />);
-
-    expect(screen.getByText("Failed to parse response")).toBeInTheDocument();
-    expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
-  });
-
-  test("it displays error.error when present in FetchBaseQueryError", async () => {
-    jest.spyOn(require("../../app/apiSlice"), "useGetStockListQuery").mockReturnValue({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      data: undefined,
-      error: {
-        status: 500,
-        error: "Internal Server Error",
-      },
-    });
-
-    render(<StockList />);
-
-    expect(screen.getByText(/An error has occurred: Internal Server Error/)).toBeInTheDocument();
-    expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
-  });
-
-  test("it displays JSON.stringify(error.data) when error.error is not present", async () => {
-    jest.spyOn(require("../../app/apiSlice"), "useGetStockListQuery").mockReturnValue({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      data: undefined,
-      error: {
-        status: 404,
-        data: { message: "Not found", code: 404 },
-      },
-    });
-
-    render(<StockList />);
-
-    expect(
-      screen.getByText(/An error has occurred: {"message":"Not found","code":404}/),
-    ).toBeInTheDocument();
     expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
   });
 });

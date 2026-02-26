@@ -1,8 +1,19 @@
 import { addDays, format, subDays, subYears } from "date-fns";
+import { convertObjectToString } from "../utilities";
 
 export const POLYGON_API_KEY = "DY4QGIRlzXYpIr5ifqrJem6mFB5RVsgq";
 export const POLYGON_LIST_URL = "https://api.polygon.io/v3/reference/tickers";
 export const POLYGON_DATA_URL = "https://api.polygon.io/v2/aggs/ticker";
+
+export const listUrlOptions = convertObjectToString({
+  market: "stocks",
+  type: "CS",
+  exchange: "XNYS",
+  active: true,
+  order: "asc",
+  limit: 100,
+  sort: "ticker",
+});
 
 export const chartPriceOptions = ["Close", "High", "Low", "Open"] as const;
 export const createInitialChartDataState = (): Record<string, TransformedData[]> => ({

@@ -14,6 +14,14 @@ test.describe("Chart", () => {
     });
 
     await page.goto("http://localhost:3000/");
+
+    // Hide Tanstack Query DevTools as it blocks clicks
+    await page.addStyleTag({
+      content: ".ReactQueryDevtools { display: none !important; }",
+    });
+
+    await expect(page.getByText("Awaiting data")).toBeVisible();
+    await expect(page.getByTestId("stocklist")).toBeVisible();
   });
 
   test("shows the awaiting data message in place of a chart", async ({ page }) => {
@@ -28,8 +36,6 @@ test.describe("Chart", () => {
         body: JSON.stringify(stockDataApiOutput),
       });
     });
-
-    await page.reload();
 
     await expect(page.getByText("Awaiting data")).toBeVisible();
     await expect(page.getByTestId("stocklist")).toBeVisible();
@@ -48,8 +54,6 @@ test.describe("Chart", () => {
         body: JSON.stringify(stockDataApiOutput),
       });
     });
-
-    await page.reload();
 
     const awaitingMsg = page.getByText("Awaiting data");
     const chart = page.getByTestId("stockchart");
@@ -78,10 +82,7 @@ test.describe("Chart", () => {
       });
     });
 
-    await page.reload();
-
-    await expect(page.getByText("Awaiting data")).toBeVisible();
-    await expect(page.getByTestId("stocklist")).toBeVisible();
+    // await page.reload();
 
     await page.getByRole("checkbox", { name: "Select A", exact: true }).check();
 
@@ -97,6 +98,6 @@ test.describe("Chart", () => {
 
     await page.getByRole("checkbox", { name: "Select AA", exact: true }).check();
 
-    await expect(page.getByText(/Failed to load AA:/)).toBeVisible();
+    await expect(page.getByText(/Failed to load AA/)).toBeVisible({ timeout: 10_000 });
   });
 });
