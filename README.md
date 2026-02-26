@@ -11,6 +11,7 @@ This is not a read me in the traditional sense but rather a diary of things I le
 3. [Immer](https://github.com/MisanthropeGirl/schroders/tree/immer) - Using [immer](https://immerjs.github.io/immer/) for state updating. Branched from 'Axios'.
 4. [Redux Toolkit](https://github.com/MisanthropeGirl/schroders/tree/redux-toolkit) - Moving to a modern redux implementation, including the use of RTK Query for data fetching. Branched from 'Redux'.
 5. [Playwright](https://github.com/MisanthropeGirl/schroders/tree/playwright) - End to end testing using Playwright. Branched from Redux Toolkit.
+6. [Tanstack](https://github.com/MisanthropeGirl/schroders/tree/tanstack) - Using [Tanstack Query](https://tanstack.com/query/v4) for the async data fetching in place of RTK Query. Otherwise leaving RTK in place. Branched from Playwright.
 
 ## 2025-10-04
 
