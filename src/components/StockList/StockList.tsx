@@ -1,5 +1,6 @@
 import { ChangeEvent, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Table from "@mui/material/Table";
@@ -21,17 +22,35 @@ function StockList() {
   const dispatch = useAppDispatch();
 
   const [prevUrl, setPrevUrl] = useState("");
-  const [url, setUrl] = useState(`${POLYGON_LIST_URL}?apiKey=${POLYGON_API_KEY}${listUrlOptions}`);
+  const [url, setUrl] = useState(POLYGON_LIST_URL);
 
   // need this to persist between renders
   const allUrls = useRef([url]);
 
   const fetchData = async (): Promise<StockListApiResponse> => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error("An error has occurred");
+    try {
+      const response = await axios.get(url, {
+        params: {
+          apiKey: POLYGON_API_KEY,
+          ...listUrlOptions,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        throw new Error(`HTTP error: Status ${error.response.status}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        throw new Error("Network error: No response received");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        throw new Error(`Request failed: ${error.message}`);
+      }
     }
-    return await response.json();
   };
 
   const {
@@ -82,8 +101,6 @@ function StockList() {
     return <div>Loading table</div>;
   }
 
-  const nextUrl = `${stockListResponse.next_url}&apiKey=${POLYGON_API_KEY}${listUrlOptions}`;
-
   function StockListExcept({ stock }: StockListExceptProps) {
     return (
       <TableRow key={stock.ticker} hover>
@@ -118,7 +135,11 @@ function StockList() {
         >
           &laquo; Previous
         </Button>
-        <Button variant="outlined" onClick={() => navigate(nextUrl)} data-testid="btn-next">
+        <Button
+          variant="outlined"
+          onClick={() => navigate(stockListResponse.next_url)}
+          data-testid="btn-next"
+        >
           Next &raquo;
         </Button>
       </div>

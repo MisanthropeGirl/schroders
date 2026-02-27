@@ -259,19 +259,47 @@ describe("StockList", () => {
     expect(screen.getByTestId("btn-prev")).toBeDisabled();
   });
 
-  test("it should display an error message when data fetch fails with Error", async () => {
+  test("it handles server error (4xx/5xx)", async () => {
     server.use(
       rest.get(POLYGON_LIST_URL, (_req, res, ctx) => {
-        return res.once(ctx.status(404));
+        return res(ctx.status(404));
       }),
     );
 
     render(<StockList />);
 
     await waitFor(() => {
-      expect(screen.getByText(/An error has occurred/)).toBeInTheDocument();
+      expect(screen.getByText(/HTTP error: Status 404/)).toBeInTheDocument();
+    });
+  });
+
+  test("it handles network error (no response)", async () => {
+    server.use(
+      rest.get(POLYGON_LIST_URL, (_req, res) => {
+        return res.networkError("Connection failed");
+      }),
+    );
+
+    render(<StockList />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Network error: No response received/)).toBeInTheDocument();
+    });
+  });
+
+  test("it handles axios setup error", async () => {
+    const axiosGetSpy = jest.spyOn(require("axios"), "get");
+
+    axiosGetSpy.mockRejectedValueOnce({
+      message: "Invalid configuration",
     });
 
-    expect(screen.queryByTestId("stocklist")).not.toBeInTheDocument();
+    render(<StockList />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Request failed: Invalid configuration/)).toBeInTheDocument();
+    });
+
+    axiosGetSpy.mockRestore();
   });
 });

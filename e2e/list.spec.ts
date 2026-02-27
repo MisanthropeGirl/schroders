@@ -61,7 +61,9 @@ test.describe("List", () => {
     await expect(page.getByTestId("stocklist")).not.toBeVisible();
 
     // Tanstack runs the query several times before failing so need to increase the timeout
-    await expect(page.getByText(/An error has occurred/)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/HTTP error: Status 404/)).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("the previous button is disabled until the next btn is clicked", async ({ page }) => {

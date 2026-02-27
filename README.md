@@ -754,3 +754,19 @@ My Playwright tests also needed some work. Which was somewhat surprising since t
 For `list.spec.ts` I had to ensure that React Query DevTools was closed as this was blocking the simulated clicks. Additionally, I had to add a longer timeout to the error test as, despite having `retry: false` in my `test-utils.tsx`, Tanstack wasn't completing the failed fetch before the test gave up looking for the error message.
 
 It had the same issue with React Query DevTools on `chart.spec.ts` but that was hardly surprising. In that file I also compounded matters by using `await page.reload();` after the API call so I was closing it, calling the API, reloading the page and thus reopening it. Doh! The last issue was with the error test (how shocking) but once again increasing the timeout sorted that.
+
+## 2026-02-27
+
+Re-introduced `axios` to replace `fetch`. Installed it and the `axios-mock-adapter` package as well as copying
+
+```
+"jest": {
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
+    }
+  },
+```
+
+from the branch.
+
+Once again using it was pretty straightforward and the only tests I had to modify/add were related to the error handling. Some of those were just updating what text to expect but, as ever, I got stuck on how to test the less likely error paths so had to ask for help.

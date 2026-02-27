@@ -1,6 +1,6 @@
 {
   "name": "schroders",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "type": "module",
   "dependencies": {
@@ -11,6 +11,7 @@
     "@reduxjs/toolkit": "^2.10.1",
     "@tanstack/react-query": "^4.43.0",
     "@tanstack/react-query-devtools": "^4.43.0",
+    "axios": "^1.13.5",
     "date-fns": "^4.1.0",
     "highcharts": "^12.4.0",
     "highcharts-react-official": "^3.2.2",
@@ -83,6 +84,9 @@
         "functions": 95,
         "lines": 95
       }
+    },
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
     }
   }
 }

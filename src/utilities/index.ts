@@ -1,11 +1,5 @@
 import { PRICE_SERIES_CODES, chartPriceOptions } from "./../constants";
 
-export const convertObjectToString = (obj: object): string => {
-  return Object.entries(obj).reduce((str, [key, val]) => {
-    return `${str}&${key}=${val}`;
-  }, "");
-};
-
 export const dataTransform = (data: StockData[], key: string): TransformedChartData => {
   return data.map(it => [
     it[PRICE_SERIES_CODES.TIME as keyof StockData] as number,

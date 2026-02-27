@@ -105,9 +105,9 @@ describe("useStockChartData", () => {
     });
   });
 
-  test("stores error message when rejection is an Error instance", async () => {
+  test("it handles server error (4xx/5xx)", async () => {
     server.use(
-      rest.get(`${POLYGON_DATA_URL}/A/range/1/day/:from/:to`, (req, res, ctx) => {
+      rest.get(`${POLYGON_DATA_URL}/A/range/1/day/:from/:to`, (_req, res, ctx) => {
         return res.once(ctx.status(500));
       }),
     );
@@ -119,7 +119,45 @@ describe("useStockChartData", () => {
     );
 
     await waitFor(() => {
-      expect(result.current.fetchErrors["A"]).toBe("Failed to fetch A");
+      expect(result.current.fetchErrors["A"]).toBe("HTTP error: Status 500");
     });
+  });
+
+  test("it handles network error (no response)", async () => {
+    server.use(
+      rest.get(`${POLYGON_DATA_URL}/A/range/1/day/:from/:to`, (_req, res) => {
+        return res.networkError("Connection failed");
+      }),
+    );
+
+    const onTickerUpdate = jest.fn();
+    const { result } = renderHook(
+      () => useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
+      { wrapper: queryClientProviderWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.fetchErrors["A"]).toBe("Network error: No response received");
+    });
+  });
+
+  test("it handles axios setup error", async () => {
+    const axiosGetSpy = jest.spyOn(require("axios"), "get");
+
+    axiosGetSpy.mockRejectedValueOnce({
+      message: "Invalid configuration",
+    });
+
+    const onTickerUpdate = jest.fn();
+    const { result } = renderHook(
+      () => useStockChartData(["A"], [], DATE_MIN, DATE_MAX, onTickerUpdate),
+      { wrapper: queryClientProviderWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.fetchErrors["A"]).toBe("Request failed: Invalid configuration");
+    });
+
+    axiosGetSpy.mockRestore();
   });
 });

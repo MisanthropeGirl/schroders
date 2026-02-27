@@ -271,7 +271,7 @@ describe("StockChart", () => {
     act(() => store.dispatch(selectedStocksUpdated("INVALID")));
 
     expect(await screen.findByText(/Failed to load INVALID/i)).toBeInTheDocument();
-    expect(await screen.findByText(/Failed to fetch/i)).toBeInTheDocument();
+    expect(await screen.findByText(/HTTP Error: Status 404/i)).toBeInTheDocument();
 
     expect(screen.queryByTestId("stockchart")).not.toBeInTheDocument();
   });
