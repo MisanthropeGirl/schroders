@@ -757,7 +757,7 @@ It had the same issue with React Query DevTools on `chart.spec.ts` but that was 
 
 ## 2026-02-27
 
-Re-introduced `axios` to replace `fetch`. Installed it and the `axios-mock-adapter` package as well as copying
+Re-introduced `axios` to replace `fetch`. Installed it and the `axios-mock-adapter` package (but then took that out later when I realised it wasn't needed) as well as copying
 
 ```
 "jest": {
